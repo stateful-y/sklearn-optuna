@@ -15,28 +15,20 @@
 
 ## What is Sklearn-Optuna?
 
-An Optuna integration for hyperparameter tuning in Scikit-Learn
+`OptunaSearchCV` is a drop-in replacement for scikit-learn's `GridSearchCV` and `RandomizedSearchCV` that uses [Optuna](https://optuna.org/) for hyperparameter optimization. It extends `BaseSearchCV` so that `fit()`, `score()`, `best_params_`, `cv_results_`, and all other sklearn search attributes work exactly as expected.
 
-[Add 1-2 paragraphs explaining:
-- The main problem or need this addresses
-- How it works at a high level
-- Key technologies or dependencies it integrates with
-- Version compatibility information if relevant]
+Optuna's tree-structured Parzen estimator (TPE), CMA-ES, and other samplers explore the search space more efficiently than grid or random search, while Optuna distributions (`FloatDistribution`, `IntDistribution`, `CategoricalDistribution`) let you express log-scaled, conditional, and mixed-type parameter spaces. Sklearn-Optuna requires Python 3.11+, scikit-learn ≥ 1.6, and Optuna ≥ 3.5.
 
-<!-- Add a screenshot showing your project in action -->
-![Sklearn-Optuna Screenshot](https://raw.githubusercontent.com/stateful-y/sklearn-optuna/main/docs/assets/screenshot_dark.png)
-
-[Optional: Add version compatibility note]
-<!-- Example: Currently, Sklearn-Optuna supports Python 3.11+, and [dependency] versions X.Y.z -->
+> **Note**: This project is inspired by [optuna-integration's OptunaSearchCV](https://optuna-integration.readthedocs.io/en/latest/reference/generated/optuna_integration.OptunaSearchCV.html).
 
 ## What are the features of Sklearn-Optuna?
 
-- **[Feature 1 Name]**: [1-2 sentence description of this capability and why it matters. Focus on the value delivered.]
-- **[Feature 2 Name]**: [1-2 sentence description emphasizing what users can accomplish with this feature.]
-- **[Feature 3 Name]**: [1-2 sentence description of the capability and its benefits.]
-- **[Feature 4 Name]**: [1-2 sentence description showing integration or compatibility aspects.]
-- **[Feature 5 Name]**: [1-2 sentence description of advanced functionality.]
-- **(Experimental) [Feature 6 Name]**: [1-2 sentence description noting this is experimental or in development.]
+- **Drop-in sklearn search**: Extends `BaseSearchCV` — works with `Pipeline`, `clone()`, `get_params()`/`set_params()`, and any estimator that follows the sklearn interface.
+- **Optuna samplers**: Choose TPE, CMA-ES, Random, or any Optuna sampler through the `Sampler` wrapper, with full sklearn parameter introspection.
+- **Flexible distributions**: Use Optuna's `FloatDistribution`, `IntDistribution`, and `CategoricalDistribution` for log-scaled, bounded, and categorical search spaces.
+- **Study persistence and reuse**: Pass a `Storage` backend to persist trials to a database, or resume optimization by passing an existing study to `fit(study=...)`.
+- **Callbacks**: Attach Optuna callbacks (e.g., `MaxTrialsCallback`) via the `Callback` wrapper to control optimization flow.
+- **(Experimental) Nested pipeline search**: Use `OptunaSearchCV` as a step inside a pipeline tuned by another `OptunaSearchCV` for hierarchical hyperparameter optimization.
 
 ## How to install Sklearn-Optuna?
 
@@ -68,47 +60,40 @@ or alternatively, add `sklearn_optuna` to your `requirements.txt` or `pyproject.
 
 ## How to get started with Sklearn-Optuna?
 
-### 1. [Initialize/Setup Step]
+### 1. Define a search space with Optuna distributions
 
-[Brief description of what this step accomplishes]
+```python
+from optuna.distributions import FloatDistribution
+from sklearn.linear_model import LogisticRegression
 
-Use the following command to [describe action]:
-
-```bash
-[command to run]
+param_distributions = {
+    "C": FloatDistribution(1e-2, 10.0, log=True),
+}
 ```
 
-### 2. [Configure/Customize Step]
+### 2. Create and fit an OptunaSearchCV
 
-[Brief description of what configuration does]
+```python
+from sklearn_optuna import OptunaSearchCV, Sampler
+import optuna
 
-Define your [settings/options] in the `[config file]` located in [location]. This file allows you to [describe what user can configure].
-
-```yaml
-# [config file path]
-[setting_section]:
-  [setting_1]: [value]  # Comment explaining setting
-  [setting_2]: [value]  # Comment explaining setting
-
-[another_section]:
-  [option_1]:
-    [sub_option]: [value]
-
-  [option_2]:
-    [sub_option]: [value]
+search = OptunaSearchCV(
+    LogisticRegression(max_iter=200),
+    param_distributions,
+    n_trials=20,
+    sampler=Sampler(sampler=optuna.samplers.TPESampler, seed=42),
+    cv=5,
+)
+search.fit(X_train, y_train)
 ```
 
-### 3. [Execute/Run Step]
+### 3. Inspect results
 
-[Brief description of how to run or execute]
-
-[Action description] using the following command:
-
-```bash
-[command to run]
+```python
+print(search.best_params_)   # {'C': 1.23}
+print(search.best_score_)    # 0.95
+search.best_estimator_.predict(X_test)
 ```
-
-[Additional context about what happens when this runs, e.g., "The [interface/UI] will be available at http://127.0.0.1:XXXX"]
 
 ## How do I use Sklearn-Optuna?
 
@@ -118,7 +103,7 @@ Full documentation is available at [https://sklearn-optuna.readthedocs.io/](http
 Interactive examples are available in the `examples/` directory:
 
 - **Online**: [https://sklearn-optuna.readthedocs.io/en/latest/pages/examples/](https://sklearn-optuna.readthedocs.io/en/latest/pages/examples/)
-- **Locally**: Run `marimo edit examples/hello.py` to open an interactive notebook
+- **Locally**: Run `just example quickstart` to open an interactive notebook
 
 
 ## Can I contribute?
@@ -133,13 +118,9 @@ If you are interested in becoming a maintainer or taking a more active role, ple
 
 ## Where can I learn more?
 
-[Customize this section based on your project's community resources. For example:]
-
-- Full documentation: [https://sklearn-optuna.readthedocs.io/](https://sklearn-optuna.readthedocs.io/)
-- GitHub Discussions: [https://github.com/stateful-y/sklearn-optuna/discussions](https://github.com/stateful-y/sklearn-optuna/discussions)
-- Interactive Examples: [https://sklearn-optuna.readthedocs.io/en/latest/pages/examples/](https://sklearn-optuna.readthedocs.io/en/latest/pages/examples/)
-
-For questions and discussions, you can also open a [discussion](https://github.com/stateful-y/sklearn-optuna/discussions).
+- **Documentation**: [https://sklearn-optuna.readthedocs.io/](https://sklearn-optuna.readthedocs.io/)
+- **Interactive examples**: [https://sklearn-optuna.readthedocs.io/en/latest/pages/examples/](https://sklearn-optuna.readthedocs.io/en/latest/pages/examples/)
+- **GitHub Discussions**: [https://github.com/stateful-y/sklearn-optuna/discussions](https://github.com/stateful-y/sklearn-optuna/discussions)
 
 ## License
 

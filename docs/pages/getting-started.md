@@ -43,94 +43,102 @@ print(sklearn_optuna.__version__)
 
 ## Basic Usage
 
-### Step 1: [Import and initialize]
+### Step 1: Import and define a search space
 
 ```python
-from sklearn_optuna.example import hello
+import optuna
+from optuna.distributions import FloatDistribution
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
 
-# Basic usage example
-result = hello("World")
-print(result)  # Output: Hello, World!
+from sklearn_optuna import OptunaSearchCV, Sampler
+
+X, y = make_classification(n_samples=200, n_features=6, random_state=42)
+
+param_distributions = {
+    "C": FloatDistribution(1e-2, 10.0, log=True),
+}
 ```
 
-### Step 2: [Configure your setup]
-
-Create a configuration file or set up options:
-
-```yaml
-# config.yaml (if your package supports config files)
-sklearn_optuna:
-  option_1: value     # Description of what this controls
-  option_2: true      # Description of what this controls
-  option_3: 10        # Description of what this controls
-```
-
-Or configure in code:
+### Step 2: Create an OptunaSearchCV instance
 
 ```python
-from sklearn_optuna import [MainClass]
-
-# Initialize with custom configuration
-instance = [MainClass](
-    option_1="value",   # Description
-    option_2=True,      # Description
-    option_3=10,        # Description
+search = OptunaSearchCV(
+    LogisticRegression(max_iter=200),
+    param_distributions,
+    n_trials=20,
+    sampler=Sampler(sampler=optuna.samplers.TPESampler, seed=42),
+    cv=3,
 )
 ```
 
-### Step 3: [Use the main functionality]
+### Step 3: Fit and inspect results
 
 ```python
-# [Add realistic example showing actual usage]
-# For example:
-# result = instance.process(data)
-# output = instance.transform(input_data)
+search.fit(X, y)
 
-# Example with the provided function
-greeting = hello("Python")
-print(greeting)
+print(search.best_params_)   # e.g. {'C': 1.23}
+print(search.best_score_)    # e.g. 0.87
+search.best_estimator_.predict(X[:5])
 ```
 
 ## Complete Example
 
-Here's a complete working example:
+Here's a complete working example (mirrors `examples/quickstart.py`):
 
 ```python
-from sklearn_optuna.example import hello
+import optuna
+from optuna.distributions import FloatDistribution
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
 
-# [Replace with realistic multi-step example]
-# Step 1: Initialize
-names = ["Alice", "Bob", "Charlie"]
+from sklearn_optuna import OptunaSearchCV, Sampler
 
-# Step 2: Process
-greetings = [hello(name) for name in names]
+# Prepare data
+X, y = make_classification(
+    n_samples=200, n_features=6, n_informative=3,
+    n_redundant=0, random_state=42,
+)
 
-# Step 3: Display results
-for greeting in greetings:
-    print(greeting)
+# Define search space
+param_distributions = {
+    "C": FloatDistribution(1e-2, 10.0, log=True),
+}
+
+# Run search
+search = OptunaSearchCV(
+    LogisticRegression(max_iter=200),
+    param_distributions,
+    n_trials=10,
+    sampler=Sampler(sampler=optuna.samplers.TPESampler, seed=0),
+    cv=3,
+)
+search.fit(X, y)
+
+print(f"Best params: {search.best_params_}")
+print(f"Best score:  {search.best_score_:.3f}")
 ```
 
 ## Try Interactive Examples
 
 For hands-on learning with interactive notebooks, see the [Examples](examples.md) page where you can:
 
-- Run code directly in your browser
+- Run code directly in your browser via WebAssembly
 - Experiment with different parameters
 - See visual outputs in real-time
-- Download standalone HTML versions
 
 Or run locally:
 
 === "just"
 
     ```bash
-    just example
+    just example quickstart
     ```
 
 === "uv run"
 
     ```bash
-    uv run marimo edit examples/hello.py
+    uv run marimo edit examples/quickstart.py
     ```
 
 ## Next Steps

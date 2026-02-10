@@ -4,59 +4,54 @@ Explore real-world applications of Sklearn-Optuna through interactive examples.
 
 ## What can Sklearn-Optuna do?
 
-### Example 1: [Use Case Title]
+### Example 1: [OptunaSearchCV Quickstart](/examples/quickstart/)
 
-[2-3 sentence description of what this example demonstrates and why it's useful. Focus on the problem being solved and the value delivered, not the technical implementation.]
+Learn how to run a fast hyperparameter search and read the best parameters and score. This example shows the fastest path from data to optimized model using familiar Scikit-Learn patterns.
 
-<!-- Add a screenshot showing the example output -->
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="../../assets/example1_light.png">
-    <source media="(prefers-color-scheme: dark)" srcset="../../assets/example1_dark.png">
-    <img src="../../assets/example1_light.png" alt="Example 1 output" width="600">
-  </picture>
-</p>
+This walkthrough uses a compact search space and a small number of trials to keep results quick and readable.
 
-[Brief paragraph explaining the approach or technique demonstrated in this example.]
+### Example 2: [Study Management and Reproducibility](/examples/study_management/)
 
-### Example 2: [Use Case Title]
+Reuse an Optuna study to continue optimization runs and keep experiments reproducible with seeded samplers. This notebook demonstrates how to resume trials and compare total trial counts.
 
-[Description focusing on the business problem or user need this example addresses. Explain what capabilities are shown and why they matter.]
+This example focuses on study reuse and reproducibility without changing the core Scikit-Learn API flow.
 
-<!-- Add screenshot placeholder -->
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="../../assets/example2_light.png">
-    <source media="(prefers-color-scheme: dark)" srcset="../../assets/example2_dark.png">
-    <img src="../../assets/example2_light.png" alt="Example 2 output" width="600">
-  </picture>
-</p>
+### Example 3: [Optuna Visualizations](/examples/visualization/)
 
-### Example 3: [Use Case Title]
+Turn completed studies into visual summaries of optimization history and parameter importance. This helps explain how the search progressed and which hyperparameters mattered most.
 
-[Description focusing on advanced features or more complex scenarios. Show how Sklearn-Optuna handles real-world complexity.]
+The notebook uses `study_` to generate interactive plots that make diagnostics easy to interpret.
 
-<!-- Add screenshot placeholder -->
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="../../assets/example3_light.png">
-    <source media="(prefers-color-scheme: dark)" srcset="../../assets/example3_dark.png">
-    <img src="../../assets/example3_light.png" alt="Example 3 output" width="600">
-  </picture>
-</p>
+### Example 4: [Early Stopping with Callbacks](/examples/callbacks/)
 
-## Interactive Demo
+Stop unneeded work early by adding Optuna callbacks to your search. This example shows how to integrate a max-trials callback for quick experimentation.
 
-For a full-page interactive experience, open the [standalone notebook](/examples/hello/) which runs entirely in your browser using WebAssembly (no server needed).
+It demonstrates how to pass a dictionary of callbacks through `OptunaSearchCV` without changing your estimator code.
+
+### Example 5: [Nested OptunaSearchCV in Pipelines](/examples/nested_pipeline/)
+
+Discover advanced nested optimization patterns where `OptunaSearchCV` serves as a final estimator in a pipeline tuned by another `OptunaSearchCV`. This example shows how to tune preprocessing choices and sampler parameters simultaneously.
+
+This walkthrough demonstrates tuning sampler parameters like `n_startup_trials` using nested parameter syntax and highlights the computational trade-offs of nested searches.
+
+### Example 6: [Metadata Routing with sample_weight](/examples/metadata_routing/)
+
+Handle imbalanced datasets by routing `sample_weight` through `OptunaSearchCV` to both model fitting and scoring. This example shows how to configure metadata routing for estimators, scorers, and pipelines.
+
+The notebook demonstrates multi-metric scoring with different routing preferences and proper handling of metadata in pipeline components.
 
 ## Running Examples Locally
 
-```bash
-# Interactive editing
-just example
+All examples are [marimo](https://marimo.io/) notebooks. Open any example interactively:
 
-# Run as script
-python examples/hello.py
+```bash
+# Via just (pass the filename without .py)
+just example quickstart
+just example advanced_spaces
+just example callbacks
+
+# Or directly with marimo
+uv run marimo edit examples/quickstart.py
 ```
 
 ## Next Steps

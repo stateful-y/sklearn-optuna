@@ -2,17 +2,50 @@
 
 Complete API reference for Sklearn-Optuna.
 
-## Modules
+## OptunaSearchCV
 
-::: sklearn_optuna
+::: sklearn_optuna.search.OptunaSearchCV
     options:
       show_root_heading: true
       show_source: true
+      show_bases: true
+      inherited_members: true
+      filters:
+        - "!^_"
+      show_if_no_docstring: false
 
-## Hello Module
+## Sampler
 
-::: sklearn_optuna.hello
+::: sklearn_optuna.optuna.Sampler
     options:
       show_root_heading: true
       show_source: true
-      members_order: source
+      show_bases: true
+      inherited_members: true
+      filters:
+        - "!^_"
+      show_if_no_docstring: false
+
+## Storage
+
+::: sklearn_optuna.optuna.Storage
+    options:
+      show_root_heading: true
+      show_source: true
+      show_bases: true
+      inherited_members: true
+      filters:
+        - "!^_"
+      show_if_no_docstring: false
+
+## Callback
+
+::: sklearn_optuna.optuna.Callback
+    options:
+      show_root_heading: true
+      show_source: true
+      show_bases: true
+      inherited_members: true
+      filters:
+        - "!^_"
+      show_if_no_docstring: false

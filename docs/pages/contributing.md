@@ -10,7 +10,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 
 ### Prerequisites
 
-- Python +
+- Python 3.11+
 - [uv](https://github.com/astral-sh/uv) (recommended)
 - [just](https://github.com/casey/just) (optional, for task automation)
 - Git

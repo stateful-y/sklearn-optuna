@@ -159,17 +159,12 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",
+    "-p no:unraisableexception",
 ]
 markers = [
     "integration: marks tests as integration tests that run subprocesses (deselect with '-m \"not integration\"')",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "example: marks tests for example notebooks (deselect with '-m \"not example\"')",
-]
-
-[tool.pytest.ini_options.doctest]
-addopts = [
-    "--doctest-modules",
-    "--doctest-continue-on-failure",
 ]
 
 [tool.coverage.paths]
@@ -192,7 +187,7 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
-fail_under = 1
+fail_under = 100
 include_namespace_packages = true
 
 [tool.coverage.html]

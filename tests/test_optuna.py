@@ -15,11 +15,12 @@ from optuna.storages import (
     InMemoryStorage,
     RDBStorage,
 )
+from optuna.study import MaxTrialsCallback
 from sklearn.base import BaseEstimator
-from sklearn.utils._param_validation import InvalidParameterError
+from sklearn_wrap import BaseClassWrapper
+from sklearn_wrap.base import REQUIRED_PARAM_VALUE
 
-from sklearn_optuna.base import REQUIRED_PARAM_VALUE, BaseWrapper
-from sklearn_optuna.optuna import Sampler, Storage
+from sklearn_optuna.optuna import Callback, Sampler, Storage
 
 
 # Tests for Sampler class
@@ -27,9 +28,9 @@ class TestSampler:
     """Tests for the Sampler wrapper class."""
 
     def test_sampler_inherits_base_wrapper(self):
-        """Test that Sampler inherits from BaseWrapper."""
+        """Test that Sampler inherits from BaseClassWrapper."""
         sampler = Sampler()
-        assert isinstance(sampler, BaseWrapper)
+        assert isinstance(sampler, BaseClassWrapper)
         assert isinstance(sampler, BaseEstimator)
 
     def test_sampler_default_initialization(self):
@@ -130,12 +131,12 @@ class TestSampler:
         assert sampler.params["n_startup_trials"] == 20
 
     def test_sampler_set_params_change_class(self):
-        """Test set_params can change sampler class."""
+        """Test that set_params cannot change sampler class (sklearn_wrap restriction)."""
         sampler = Sampler(sampler=TPESampler)
-        sampler.set_params(sampler=RandomSampler, seed=42)
 
-        assert sampler.estimator_class == RandomSampler
-        assert sampler.params["seed"] == 42
+        # sklearn_wrap prevents changing estimator class via set_params
+        with pytest.raises(ValueError, match="Cannot change estimator class"):
+            sampler.set_params(sampler=RandomSampler)
 
     def test_sampler_set_params_returns_self(self):
         """Test that set_params returns self for chaining."""
@@ -157,16 +158,14 @@ class TestSampler:
         assert sampler.estimator_base_class == BaseSampler
 
     def test_sampler_invalid_sampler_class(self):
-        """Test that invalid sampler class raises error on instantiate."""
+        """Test that invalid sampler class raises error on initialization."""
 
         class NotASampler:
             def __init__(self):
                 pass
 
-        sampler = Sampler(sampler=NotASampler)
-
-        with pytest.raises(InvalidParameterError):
-            sampler.instantiate()
+        with pytest.raises(ValueError, match="Invalid sampler class.*Valid estimator class should be derived from"):
+            Sampler(sampler=NotASampler)
 
     def test_sampler_invalid_parameter(self):
         """Test that invalid parameter raises ValueError."""
@@ -180,7 +179,7 @@ class TestSampler:
         # Should have REQUIRED_PARAM_VALUE for search_space
         assert sampler.params["search_space"] == REQUIRED_PARAM_VALUE
 
-        with pytest.raises(ValueError, match="requires parameter search_space"):
+        with pytest.raises(ValueError, match="requires parameter.*search_space"):
             sampler.instantiate()
 
     def test_sampler_with_all_default_params(self):
@@ -199,11 +198,11 @@ class TestSampler:
 
         # Get params
         params = sampler.get_params()
+        assert "seed" in params
+        assert params["seed"] == 42
 
-        # Modify and set back
-        params["seed"] = 999
-        sampler.set_params(**params)
-
+        # Modify parameters (but not estimator class)
+        sampler.set_params(seed=999)
         assert sampler.params["seed"] == 999
 
     def test_sampler_multiple_instantiation(self):
@@ -226,9 +225,9 @@ class TestStorage:
     """Tests for the Storage wrapper class."""
 
     def test_storage_inherits_base_wrapper(self):
-        """Test that Storage inherits from BaseWrapper."""
+        """Test that Storage inherits from BaseClassWrapper."""
         storage = Storage(storage=InMemoryStorage)
-        assert isinstance(storage, BaseWrapper)
+        assert isinstance(storage, BaseClassWrapper)
         assert isinstance(storage, BaseEstimator)
 
     def test_storage_default_initialization(self):
@@ -266,7 +265,7 @@ class TestStorage:
         # Should have REQUIRED_PARAM_VALUE for url
         assert storage.params["url"] == REQUIRED_PARAM_VALUE
 
-        with pytest.raises(ValueError, match="requires parameter url"):
+        with pytest.raises(ValueError, match="requires parameter.*url"):
             storage.instantiate()
 
     def test_storage_get_params(self):
@@ -293,11 +292,11 @@ class TestStorage:
         assert storage.params["url"] == "sqlite:///new.db"
 
     def test_storage_set_params_change_class(self):
-        """Test set_params can change storage class."""
+        """Test that set_params cannot change storage class."""
         storage = Storage(storage=RDBStorage, url="sqlite:///:memory:")
-        storage.set_params(storage=InMemoryStorage)
 
-        assert storage.estimator_class == InMemoryStorage
+        with pytest.raises(ValueError, match="Cannot change estimator class"):
+            storage.set_params(storage=InMemoryStorage)
 
     def test_storage_set_params_returns_self(self):
         """Test that set_params returns self for chaining."""
@@ -319,16 +318,14 @@ class TestStorage:
         assert storage.estimator_base_class == BaseStorage
 
     def test_storage_invalid_storage_class(self):
-        """Test that invalid storage class raises error on instantiate."""
+        """Test that invalid storage class raises error on initialization."""
 
         class NotAStorage:
             def __init__(self):
                 pass
 
-        storage = Storage(storage=NotAStorage)
-
-        with pytest.raises(InvalidParameterError):
-            storage.instantiate()
+        with pytest.raises(ValueError, match="Invalid storage class.*Valid estimator class should be derived from"):
+            Storage(storage=NotAStorage)
 
     def test_storage_invalid_parameter(self):
         """Test that invalid parameter raises ValueError."""
@@ -341,11 +338,11 @@ class TestStorage:
 
         # Get params
         params = storage.get_params()
+        assert "url" in params
+        assert params["url"] == "sqlite:///:memory:"
 
-        # Modify and set back
-        params["url"] = "sqlite:///test.db"
-        storage.set_params(**params)
-
+        # Modify parameters (but not estimator class)
+        storage.set_params(url="sqlite:///test.db")
         assert storage.params["url"] == "sqlite:///test.db"
 
     def test_storage_rdb_with_engine_kwargs(self):
@@ -509,3 +506,114 @@ class TestEdgeCases:
 
         assert isinstance(repr_str, str)
         assert "Storage" in repr_str
+
+
+# Tests for Callback class
+class TestCallback:
+    """Tests for the Callback wrapper class."""
+
+    def test_callback_inherits_base_wrapper(self):
+        """Test that Callback inherits from BaseClassWrapper."""
+        callback = Callback(MaxTrialsCallback, n_trials=10)
+        assert isinstance(callback, BaseClassWrapper)
+        assert isinstance(callback, BaseEstimator)
+
+    def test_callback_initialization_with_class(self):
+        """Test Callback initialization with callback class."""
+        callback = Callback(MaxTrialsCallback, n_trials=20)
+        assert callback.estimator_class == MaxTrialsCallback
+        assert callback.estimator_name == "callback"
+        assert callback.params["n_trials"] == 20
+
+    def test_callback_initialization_non_class_raises_error(self):
+        """Test that passing non-class to Callback raises TypeError."""
+        callback_instance = MaxTrialsCallback(n_trials=10, states=None)
+        with pytest.raises(TypeError, match="callback must be a class"):
+            Callback(callback_instance)
+
+    def test_callback_initialization_with_instance_raises_error(self):
+        """Test that passing an instance instead of class raises TypeError."""
+        with pytest.raises(TypeError, match="callback must be a class"):
+            Callback("not a class")
+
+    def test_callback_get_params(self):
+        """Test get_params returns correct parameters."""
+        callback = Callback(MaxTrialsCallback, n_trials=15)
+        params = callback.get_params()
+        assert params["callback"] == MaxTrialsCallback
+        assert params["n_trials"] == 15
+
+    def test_callback_set_params(self):
+        """Test set_params modifies parameters."""
+        callback = Callback(MaxTrialsCallback, n_trials=10)
+        result = callback.set_params(n_trials=25)
+        assert result is callback
+        assert callback.params["n_trials"] == 25
+
+    def test_callback_instantiate(self):
+        """Test instantiate creates callback instance."""
+        callback = Callback(MaxTrialsCallback, n_trials=10)
+        callback.instantiate()
+        assert hasattr(callback, "instance_")
+        assert isinstance(callback.instance_, MaxTrialsCallback)
+
+    def test_callback_call_invokes_instance(self, optuna_study):
+        """Test __call__ method invokes the callback instance."""
+        callback = Callback(MaxTrialsCallback, n_trials=5)
+        callback.instantiate()
+
+        # Create a simple trial
+        def objective(trial):
+            return trial.suggest_float("x", 0, 1)
+
+        # Run one trial
+        optuna_study.optimize(objective, n_trials=1)
+        trial = optuna_study.trials[0]
+
+        # Call the callback
+        callback(optuna_study, trial)
+        # Should not raise any errors
+
+    def test_callback_custom_class(self):
+        """Test Callback with custom callback class."""
+
+        class CustomCallback:
+            def __init__(self, threshold=0.5):
+                self.threshold = threshold
+
+            def __call__(self, study, trial):
+                pass
+
+        callback = Callback(CustomCallback, threshold=0.8)
+        assert callback.estimator_class == CustomCallback
+        assert callback.params["threshold"] == 0.8
+
+    def test_callback_integration_with_optuna(self, optuna_study):
+        """Test that callback works in Optuna optimization."""
+        callback = Callback(MaxTrialsCallback, n_trials=3)
+        callback.instantiate()
+
+        def objective(trial):
+            return trial.suggest_float("x", 0, 1)
+
+        # Should stop after 3 trials due to callback
+        optuna_study.optimize(objective, n_trials=10, callbacks=[callback.instance_])
+        assert len(optuna_study.trials) == 3
+
+    def test_callback_repr(self):
+        """Test that Callback has a reasonable string representation."""
+        callback = Callback(MaxTrialsCallback, n_trials=10)
+        repr_str = repr(callback)
+        assert isinstance(repr_str, str)
+        assert "Callback" in repr_str
+
+    def test_callback_multiple_instantiate(self):
+        """Test that calling instantiate multiple times works."""
+        callback = Callback(MaxTrialsCallback, n_trials=5)
+        callback.instantiate()
+        first_instance = callback.instance_
+        callback.instantiate()
+        second_instance = callback.instance_
+        # Should create new instances each time
+        assert first_instance is not second_instance
+        assert isinstance(first_instance, type(second_instance))

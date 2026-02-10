@@ -4,223 +4,255 @@ This guide provides comprehensive documentation for Sklearn-Optuna.
 
 ## Overview
 
-An Optuna integration for hyperparameter tuning in Scikit-Learn
-
-[Add 2-3 paragraphs expanding on:
-- What makes this package unique
-- Core philosophy and design principles
-- When to use it vs alternatives]
+Sklearn-Optuna bridges two ecosystems: Scikit-Learn's estimator API and Optuna's hyperparameter optimization framework. The main entry point, `OptunaSearchCV`, extends `BaseSearchCV` so that every Scikit-Learn pattern such as `fit()`/`score()`, `Pipeline`, `clone()`, `get_params()`/`set_params()` as well as metadata routing works without modification. Under the hood it creates an Optuna study, runs trials that call `cross_validate`, and exposes results through the standard Scikit-Learn `cv_results_` dict and Optuna `study_` object.
 
 ## Prerequisites
 
 Before diving into Sklearn-Optuna, it's helpful to understand:
 
-### [Prerequisite Technology/Concept 1]
+### Scikit-learn search API
 
-[Brief 2-3 sentence explanation of what this is and why it matters. Link to external docs for deeper learning.]
+Sklearn-Optuna extends Scikit-Learn's `BaseSearchCV` class, which provides the foundation for hyperparameter search estimators like `GridSearchCV` and `RandomizedSearchCV`. This means `OptunaSearchCV` inherits the complete search API: `fit(X, y)` runs the search, `score(X, y)` evaluates the best model, `best_params_` and `best_estimator_` expose results, and `cv_results_` provides detailed per-trial metrics. The search object itself is an estimator that works in pipelines, supports `clone()`, and integrates with Scikit-Learn's metadata routing system.
 
-Learn more: [Official Documentation](https://example.com)
+Learn more: [Scikit-Learn Model Selection documentation](https://scikit-learn.org/stable/model_selection.html)
 
-### [Prerequisite Technology/Concept 2]
+### Optuna distributions
 
-[Brief explanation of the second prerequisite technology or concept.]
+Search spaces are defined with Optuna distribution objects (`FloatDistribution`, `IntDistribution`, `CategoricalDistribution`). Each distribution describes bounds, log-scaling, and step size for a single hyperparameter.
 
-Learn more: [Official Documentation](https://example.com)
+Learn more: [Optuna Distributions API](https://optuna.readthedocs.io/en/stable/reference/distributions.html)
 
 ## Why Sklearn-Optuna?
 
-[2-3 paragraphs explaining the philosophy and value proposition:
-- What problem space does this address?
-- What's the approach or methodology?
-- How does it fit into the broader ecosystem?
-- What makes this solution effective?]
+### Compared to GridSearchCV / RandomizedSearchCV
 
-### For [User Persona 1] Users
+Scikit-learn's built-in searches are either exhaustive (grid) or uniformly random. `OptunaSearchCV` replaces them with sample-efficient algorithms — primarily TPE — that focus trials on promising regions of the search space. The API is identical: swap `GridSearchCV` for `OptunaSearchCV`, replace `param_grid` with `param_distributions` using Optuna distribution objects, and everything else (`cv`, `scoring`, `refit`, `n_jobs`, `cv_results_`) stays the same.
 
-If you're coming from [context/background], Sklearn-Optuna offers:
+### Compared to using Optuna directly
 
-- **[Benefit 1]**: [2-3 line detailed explanation of how this helps this persona specifically]
-- **[Benefit 2]**: [2-3 line detailed explanation of how this helps this persona specifically]
-- **[Benefit 3]**: [2-3 line detailed explanation of how this helps this persona specifically]
-- **[Benefit 4]**: [2-3 line detailed explanation of how this helps this persona specifically]
+Raw Optuna gives you full control (multi-objective, pruning, dashboards) but requires you to write the objective function, manage cross-validation, and reconstruct results manually. Sklearn-Optuna handles all of that: it builds the objective, runs `cross_validate`, stores per-fold scores in trial user attributes, and assembles `cv_results_` automatically.
 
-### For [User Persona 2] Users
+### Compared to optuna-integration's OptunaSearchCV
 
-If you're familiar with [alternative approach/tool], you'll appreciate:
-
-- **[Benefit 1]**: [2-3 line detailed explanation of how this helps this persona specifically]
-- **[Benefit 2]**: [2-3 line detailed explanation of how this helps this persona specifically]
-- **[Benefit 3]**: [2-3 line detailed explanation of how this helps this persona specifically]
+The existing `optuna_integration.OptunaSearchCV` provides similar functionality but with a different design philosophy. Sklearn-Optuna directly extends `BaseSearchCV`, inheriting Scikit-Learn's complete search interface including metadata routing, `clone()` support, and pipeline compatibility without additional glue code. Additionally, Sklearn-Optuna wraps Optuna components (samplers, storages, callbacks) in Scikit-Learn-compatible classes that expose `get_params()` and `set_params()`, which means they survive cloning and serialization and can be used as tunable hyperparameters in nested cross-validation scenarios. This tighter integration makes Sklearn-Optuna feel like a native Scikit-Learn component rather than a bridge between two libraries.
 
 ## Core Concepts
 
-### [Concept 1: Primary Concept Name]
+### OptunaSearchCV lifecycle
 
-[2-3 paragraphs explaining this core concept:
-- What it is and why it exists
-- How it works at a conceptual level
-- Why this design choice was made
-- Examples or analogies that clarify]
+1. **Construction** — You pass an estimator, `param_distributions`, and optional `Sampler`/`Storage`/`Callback` wrappers.
+2. **`fit(X, y)`** — Creates (or reuses) an Optuna study. Each trial suggests parameters from the distributions, clones the estimator, and runs `cross_validate`. Scores are stored as trial user attributes.
+3. **Results** — After optimization, `cv_results_` is built from trial data, `best_params_` / `best_score_` / `best_index_` are set, and (if `refit=True`) `best_estimator_` is trained on the full dataset.
 
 ```python
-# Example demonstrating the concept
-from sklearn_optuna import [Class]
+from sklearn_optuna import OptunaSearchCV
 
-# [Brief code example]
+search = OptunaSearchCV(estimator, param_distributions, n_trials=50)
+search.fit(X, y)
+search.best_params_      # best hyperparameters
+search.cv_results_       # full results dict
+search.best_estimator_   # refitted model
 ```
 
-### [Concept 2: Secondary Concept Name]
+**Example:** See the [Quickstart notebook](/examples/quickstart/) for a complete walkthrough.
 
-[Detailed explanation of the second core concept with similar depth]
+### Wrapper classes: Sampler, Storage, Callback
+
+Optuna objects (samplers, storages, callbacks) are not Scikit-Learn-compatible by default — they lack `get_params()` / `set_params()`. Sklearn-Optuna provides thin wrappers (`Sampler`, `Storage`, `Callback`) that store the class and its constructor arguments separately. When `OptunaSearchCV` needs the actual object it calls `wrapper.instantiate()`.
+
+This design means wrappers survive `clone()` and can be tuned as hyperparameters in nested searches.
 
 ```python
-# Example demonstrating the concept
+from sklearn_optuna import Sampler, Storage, Callback
+import optuna
+
+sampler = Sampler(sampler=optuna.samplers.TPESampler, seed=42)
+storage = Storage(storage=optuna.storages.RDBStorage, url="sqlite:///study.db")
+callback = Callback(callback=optuna.study.MaxTrialsCallback, n_trials=100)
+```
+
+### Parameter distributions
+
+Pass a `dict[str, BaseDistribution]` as `param_distributions`. The keys must match the estimator's constructor parameter names (or use `__` syntax for pipeline sub-estimators).
+
+```python
+from optuna.distributions import FloatDistribution, IntDistribution, CategoricalDistribution
+
+param_distributions = {
+    "C": FloatDistribution(1e-3, 100.0, log=True),
+    "max_iter": IntDistribution(50, 500, step=50),
+    "solver": CategoricalDistribution(["lbfgs", "saga"]),
+}
 ```
 
 ## Key Features
 
-### [Feature 1: Feature Name]
+### Sampler selection
 
-[2-3 paragraphs explaining this feature:
-- What capability this provides
-- Why it matters and what problems it solves
-- How to use it effectively
-- When to use this feature]
-
-**Example:**
+Choose any Optuna sampler through the `Sampler` wrapper. TPE is the default; CMA-ES works well for low-dimensional continuous spaces; `RandomSampler` gives a baseline.
 
 ```python
-from sklearn_optuna import [Component]
+from sklearn_optuna import Sampler
+import optuna
 
-# Demonstrate the feature with realistic code
-```
-
-Learn more: [Related concept or external documentation](https://example.com)
-
-### [Feature 2: Feature Name]
-
-[Detailed explanation of this feature]
-
-**Example:**
-
-```python
-# Realistic example code
-```
-
-### [Feature 3: Feature Name]
-
-[Detailed explanation with focus on practical use]
-
-### [Feature 4: Feature Name]
-
-[Explanation including trade-offs and best practices]
-
-### [Feature 5: Feature Name]
-
-[Explanation of advanced or specialized feature]
-
-### [Feature 6: Feature Name] *(Experimental)*
-
-[Explanation of experimental or future features, noting maturity level and potential changes]
-
-> **Note**: This feature is experimental and may change in future versions.
-
-## Configuration
-
-### Basic Configuration
-
-[Explanation of how to configure the package]
-
-```python
-from sklearn_optuna import [ConfigClass]
-
-config = [ConfigClass](
-    option_1="value",  # Description of what this controls
-    option_2=True,     # Description of what this controls
+search = OptunaSearchCV(
+    estimator, param_distributions,
+    sampler=Sampler(sampler=optuna.samplers.CmaEsSampler, seed=0),
 )
 ```
 
-Or using a configuration file:
+### Callbacks
 
-```yaml
-# config.yaml
-sklearn_optuna:
-  option_1: value
-  option_2: true
+Pass a dictionary of `Callback` wrappers to control optimization. Each callback is invoked at the end of every trial.
+
+```python
+from sklearn_optuna import Callback
+from optuna.study import MaxTrialsCallback
+
+search = OptunaSearchCV(
+    estimator, param_distributions,
+    callbacks={"max_trials": Callback(callback=MaxTrialsCallback, n_trials=50)},
+)
 ```
 
-### Advanced Configuration
+**Example:** See the [Callbacks notebook](/examples/callbacks/) for early stopping patterns.
 
-[More advanced configuration options and patterns]
+### Study persistence and reuse
+
+Persist trials to a database with `Storage`, or resume a previous run by passing an existing study to `fit()`.
+
+```python
+# Persist to SQLite
+search = OptunaSearchCV(
+    estimator, param_distributions,
+    storage=Storage(storage=optuna.storages.RDBStorage, url="sqlite:///study.db"),
+)
+search.fit(X, y)
+
+# Resume later
+search.fit(X, y, study=search.study_)
+```
+
+**Example:** See the [Study Management notebook](/examples/study_management/) for reproducibility patterns.
+
+### Multi-metric scoring
+
+Pass multiple scorers via `scoring` and set `refit` to the metric name used for selecting the best model. All metrics appear in `cv_results_`.
+
+```python
+search = OptunaSearchCV(
+    estimator, param_distributions,
+    scoring=["accuracy", "f1"],
+    refit="accuracy",
+)
+```
+
+**Example:** See the [Metadata Routing notebook](/examples/metadata_routing/) for advanced scoring patterns with `sample_weight`.
+
+### Training scores and error handling
+
+Set `return_train_score=True` to include training fold scores in `cv_results_`. Use `error_score` to control what happens when a parameter combination causes fitting to fail.
+
+```python
+search = OptunaSearchCV(
+    estimator, param_distributions,
+    return_train_score=True,
+    error_score="raise",  # or np.nan to skip failures
+)
+```
+
+### Pipeline integration
+
+`OptunaSearchCV` works inside and around Scikit-Learn pipelines. Use `__` syntax to address sub-estimator parameters.
+
+```python
+from Scikit-Learn.pipeline import Pipeline
+from Scikit-Learn.preprocessing import StandardScaler
+
+pipe = Pipeline([("scaler", StandardScaler()), ("clf", LogisticRegression())])
+param_distributions = {
+    "clf__C": FloatDistribution(1e-2, 10.0, log=True),
+}
+search = OptunaSearchCV(pipe, param_distributions, n_trials=20)
+```
+
+**Example:** See the [Nested Pipeline notebook](/examples/nested_pipeline/) for advanced nested search patterns.
+
+## Configuration
+
+### Basic parameters
+
+| Parameter     | Default | Description |
+|:-------------|:--------|:-----------|
+| `n_trials`   | `10`    | Number of Optuna trials to run |
+| `timeout`    | `None`  | Maximum seconds for the study |
+| `cv`         | `None`  | Cross-validation strategy (default 5-fold) |
+| `n_jobs`     | `None`  | Parallel jobs (`-1` = all CPUs) |
+| `refit`      | `True`  | Refit best estimator on full data |
+| `verbose`    | `0`     | Verbosity level |
+
+### Advanced parameters
+
+| Parameter              | Default | Description |
+|:----------------------|:--------|:-----------|
+| `sampler`             | `None`  | `Sampler` wrapper (defaults to TPE internally) |
+| `storage`             | `None`  | `Storage` wrapper for trial persistence |
+| `callbacks`           | `None`  | `dict[str, Callback]` invoked per trial |
+| `scoring`             | `None`  | Scorer string, callable, list, or dict |
+| `return_train_score`  | `False` | Include training fold scores |
+| `error_score`         | `np.nan`| Value on fit failure, or `"raise"` |
 
 ## Best Practices
 
-### 1. [Best Practice Category 1]
+### 1. Start small, then scale
 
-**Do:**
-- [Specific recommendation with brief explanation]
-- [Another recommendation]
+Run a handful of trials first to verify the search space makes sense, then increase `n_trials`. Use `timeout` as a safety net for long-running experiments.
 
-**Don't:**
-- [Anti-pattern to avoid with explanation why]
+### 2. Use log-scaling for magnitude parameters
 
-### 2. [Best Practice Category 2]
+Regularization constants (`C`, `alpha`) and learning rates typically span several orders of magnitude. Use `FloatDistribution(..., log=True)` so trials are sampled uniformly in log-space.
 
-[Explanation of recommended patterns and approaches]
+### 3. Seed the sampler for reproducibility
 
-### 3. [Best Practice Category 3]
+Pass `seed=` to the `Sampler` wrapper so that results are deterministic when `n_jobs=1`.
 
-[Additional guidance on effective usage]
+```python
+sampler=Sampler(sampler=optuna.samplers.TPESampler, seed=42)
+```
 
 ## Limitations and Considerations
 
-Understanding the limitations helps you make informed decisions:
+1. **No pruning yet**: Optuna's pruning API (early stopping of unpromising trials) is not wired into `OptunaSearchCV`. All trials run full cross-validation.
 
-1. **[Limitation 1]**: [Explanation of the trade-off or constraint and why it exists]
+2. **Single-objective only**: `OptunaSearchCV` creates a single-objective (`direction="maximize"`) study. Multi-objective Pareto optimization requires using Optuna directly.
 
-2. **[Limitation 2]**: [Explanation of what's not supported and potential workarounds]
-
-3. **[Consideration 3]**: [Important factor to consider when using this package]
-
-## Troubleshooting
-
-### [Common Issue 1]
-
-**Problem**: [Description of the problem users encounter]
-
-**Solution**: [Step-by-step solution with code examples]
-
-```python
-# Example showing the solution
-```
-
-### [Common Issue 2]
-
-**Problem**: [Description]
-
-**Solution**: [Resolution with explanation]
-
-**Solution**: [Resolution with explanation]
+3. **Parallelism**: `n_jobs` controls Optuna's threading-based parallel trial execution. Within each trial, `cross_validate` runs with `n_jobs=1` to avoid nested parallelism issues. For CPU-bound workloads, consider using `n_jobs=1` and parallelizing at the trial level with multiprocessing storage backends.
 
 ## FAQ
 
-### [Question 1]?
+### Can I use OptunaSearchCV in a Pipeline?
 
-[Detailed answer addressing the question comprehensively]
+Yes. `OptunaSearchCV` is a valid Scikit-Learn estimator. You can use it as a step in a `Pipeline` or wrap a `Pipeline` with it.
 
-### [Question 2]?
+### How do I access the Optuna study after fitting?
 
-[Answer with examples or links as needed]
+The study is available as `search.study_` and the trial list as `search.trials_`. You can pass `search.study_` to Optuna's visualization functions directly.
 
-### [Question 3]?
+**Example:** See the [Visualization notebook](/examples/visualization/) for plotting optimization history and parameter importance.
 
-[Answer that might reference other sections or external resources]
+### Can I resume a previous search?
+
+Pass the study from a previous run to `fit()`:
+
+```python
+search.fit(X, y, study=search.study_)
+```
+
+This appends new trials to the existing study.
 
 ## Next Steps
 
-Now that you understand the core concepts and features:
-
-- Follow the [Getting Started](getting-started.md) guide to start using Sklearn-Optuna
-- Explore the [Examples](examples.md) for real-world use cases
-- Check the [API Reference](api-reference.md) for detailed API documentation
-- Join the community on [GitHub Discussions](https://github.com/stateful-y/sklearn-optuna/discussions)
+- Follow the [Getting Started](getting-started.md) guide for installation and first run
+- Explore the [Examples](examples.md) for interactive notebooks
+- Check the [API Reference](api-reference.md) for full parameter documentation
+- Join the community on [GitHub Discussions](https://github.com/stateful-y/Scikit-Learn-optuna/discussions)

@@ -468,10 +468,9 @@ def test_metadata_routing_with_study_object(classification_data_with_metadata):
             {"C": FloatDistribution(0.1, 1.0)},
             n_trials=2,
             cv=2,
-            study=study,
         )
 
-        search.fit(X, y, sample_weight=sample_weight)
+        search.fit(X, y, study=study, sample_weight=sample_weight)
         assert hasattr(search, "best_score_")
         # Study should have trials
         assert len(study.trials) == 2

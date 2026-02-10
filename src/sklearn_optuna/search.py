@@ -1,16 +1,18 @@
 """Optuna-powered hyperparameter search for scikit-learn."""
 
 from numbers import Integral, Real
-from typing import cast
 
 import numpy as np
 import optuna
 from optuna.distributions import BaseDistribution
+from sklearn.base import clone
 from sklearn.model_selection._search import BaseSearchCV
+from sklearn.utils import indexable
 from sklearn.utils._param_validation import Interval
-from sklearn.utils.validation import check_is_fitted
 
-from sklearn_optuna.optuna import Sampler, Storage
+from sklearn_optuna.objective import _Objective
+from sklearn_optuna.optuna import Callback, Sampler, Storage
+from sklearn_optuna.utils import _build_cv_results
 
 
 class OptunaSearchCV(BaseSearchCV):
@@ -18,8 +20,8 @@ class OptunaSearchCV(BaseSearchCV):
 
     OptunaSearchCV implements a "fit" and a "score" method and provides
     hyperparameter optimization using Optuna's trial-based optimization
-    framework. It automatically manages the Optuna study, suggests parameters
-    using the specified sampler, and optionally supports early stopping via pruning.
+    framework. It automatically manages the Optuna study and suggests parameters
+    using the specified sampler.
 
     The parameters of the estimator used to apply these methods are optimized
     by cross-validated search over parameter settings defined using Optuna
@@ -38,39 +40,33 @@ class OptunaSearchCV(BaseSearchCV):
         objects as values. Distributions define the search space for each
         hyperparameter.
 
-    cv : int, cross-validation generator or iterable, default=None
-        Determines the cross-validation splitting strategy.
-        Possible inputs for cv are:
-
-        - None, to use the default 5-fold cross validation,
-        - int, to specify the number of folds in a `(Stratified)KFold`,
-        - CV splitter,
-        - An iterable yielding (train, test) splits as arrays of indices.
-
     scoring : str, callable, list, tuple, or dict, default=None
         Strategy to evaluate the performance of the cross-validated model on
         the test set.
 
-    n_jobs : int, default=None
-        Number of jobs to run in parallel. ``None`` means 1 unless in a
-        :obj:`joblib.parallel_backend` context. ``-1`` means using all
-        processors.
+        If `scoring` represents a single score, one can use:
 
-    refit : bool, str, or callable, default=True
-        Refit an estimator using the best found parameters on the whole
-        dataset.
+        - a single string (see [scoring parameter](https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter));
+        - a callable (see [implementing scorers](https://scikit-learn.org/stable/modules/model_evaluation.html#implementing-your-own-scoring-object)) that returns a single value.
 
-    verbose : int, default=0
-        Controls the verbosity: the higher, the more messages.
+        If `scoring` represents multiple scores, one can use:
 
-    error_score : 'raise' or numeric, default=np.nan
-        Value to assign to the score if an error occurs in estimator fitting.
-        If set to 'raise', the error is raised. If a numeric value is given,
-        FitFailedWarning is raised.
+        - a list or tuple of unique strings;
+        - a callable returning a dictionary where the keys are the metric
+          names and the values are the metric scores;
+        - a dictionary with metric names as keys and callables as values.
 
-    return_train_score : bool, default=False
-        If ``False``, the ``cv_results_`` attribute will not include training
-        scores.
+        See [multimetric grid search](https://scikit-learn.org/stable/modules/grid_search.html#multimetric-grid-search) for an example.
+
+    sampler : Sampler, default=None
+        A wrapped Optuna sampler. If None, TPESampler is used.
+
+    storage : Storage, default=None
+        A wrapped Optuna storage. If None, in-memory storage is used.
+
+    callbacks : dict of str to Callback, default=None
+        Dictionary mapping callback names to Callback instances. Each callback
+        is invoked at the end of each trial with the study and trial objects.
 
     n_trials : int, default=10
         Number of trials for hyperparameter search. Each trial evaluates one
@@ -80,50 +76,56 @@ class OptunaSearchCV(BaseSearchCV):
         Stop study after the given number of seconds. If this argument is set
         to None, the study is executed without time limitation.
 
-    study : optuna.study.Study, default=None
-        A study corresponds to an optimization task. If None, a new study is
-        created.
+    n_jobs : int, default=None
+        Number of parallel trials to run. This parameter is passed directly to
+        Optuna's ``study.optimize(n_jobs=...)`` which uses threading for
+        parallelization. ``None`` or ``1`` runs trials sequentially. ``-1`` uses
+        all available CPU cores. Note that each trial runs cross-validation with
+        ``n_jobs=1`` internally to avoid nested parallelism.
 
-    sampler : Sampler, default=None
-        A sampler wrapped in the Sampler class. If None, TPESampler is used.
+    refit : bool, str, or callable, default=True
+        Refit an estimator using the best found parameters on the whole
+        dataset.
 
-    storage : Storage, default=None
-        A storage wrapped in the Storage class. If None, in-memory storage
-        is used.
+    cv : int, cross-validation generator or an iterable, default=None
+        Determines the cross-validation splitting strategy.
+        Possible inputs for cv are:
 
-    enable_pruning : bool, default=False
-        If True, enable early stopping of unpromising trials. Requires the
-        estimator to have a ``partial_fit`` method.
+        - None, to use the default 5-fold cross validation,
+        - integer, to specify the number of folds in a `(Stratified)KFold`,
+        - [CV splitter](https://scikit-learn.org/stable/glossary.html#term-CV-splitter),
+        - An iterable yielding (train, test) splits as arrays of indices.
 
-        .. note::
-           Pruning is not yet implemented in this version.
+        For integer/None inputs, if the estimator is a classifier and ``y`` is
+        either binary or multiclass, :class:`StratifiedKFold` is used. In all
+        other cases, :class:`KFold` is used. These splitters are instantiated
+        with `shuffle=False` so the splits will be the same across calls.
 
-    max_iter : int, default=10
-        Maximum number of iterations for pruning. Only used when
-        ``enable_pruning=True``.
+        Refer to the [cross-validation user guide](https://scikit-learn.org/stable/modules/cross_validation.html) for the various
+        cross-validation strategies that can be used here.
 
-        .. note::
-           Pruning is not yet implemented in this version.
+    verbose : int, default=0
+        Controls the verbosity: the higher, the more messages.
 
-    subsample : float or int, default=1.0
-        Proportion of the training set to use for hyperparameter search.
-        If float, should be between 0.0 and 1.0 and represent the proportion
-        of the dataset. If int, represents the absolute number of samples.
-        The full training set is used for the final refit.
+        - `>1` : the computation time for each fold and parameter candidate is
+          displayed;
+        - `>2` : the score is also displayed;
+        - `>3` : the fold and candidate parameter indexes are also displayed
+          together with the starting time of the computation.
 
-        .. note::
-           Subsampling is not yet implemented in this version.
+    error_score : 'raise' or numeric, default=np.nan
+        Value to assign to the score if an error occurs in estimator fitting.
+        If set to 'raise', the error is raised. If a numeric value is given,
+        FitFailedWarning is raised.
 
-    callbacks : list of callable, default=None
-        List of callback functions that are invoked at the end of each trial.
-        Each function must accept two parameters with the following types in
-        this order: :class:`~optuna.study.Study` and
-        :class:`~optuna.trial.FrozenTrial`.
-
-    catch : tuple of Exception, default=()
-        A tuple of exception classes to catch during trial execution. Caught
-        exceptions are stored in the trial's ``user_attrs`` and do not stop
-        the study.
+    return_train_score : bool, default=False
+        If ``False``, the ``cv_results_`` attribute will not include training
+        scores.
+        Computing training scores is used to get insights on how different
+        parameter settings impact the overfitting/underfitting trade-off.
+        However computing the scores on the training set can be computationally
+        expensive and is not strictly required to select the parameters that
+        yield the best generalization performance.
 
     Attributes
     ----------
@@ -131,13 +133,72 @@ class OptunaSearchCV(BaseSearchCV):
         A dict with keys as column headers and values as columns, that can be
         imported into a pandas ``DataFrame``.
 
+        For instance the below given table
+
+        +------------+-----------+------------+-----------------+---+---------+
+        |param_kernel|param_gamma|param_degree|split0_test_score|...|rank_...|
+        +============+===========+============+=================+===+=========+
+        |  'poly'    |     --    |      2     |       0.80      |...|    2    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'poly'    |     --    |      3     |       0.70      |...|    4    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'rbf'     |     0.1   |     --     |       0.80      |...|    3    |
+        +------------+-----------+------------+-----------------+---+---------+
+        |  'rbf'     |     0.2   |     --     |       0.93      |...|    1    |
+        +------------+-----------+------------+-----------------+---+---------+
+
+        will be represented by a ``cv_results_`` dict of::
+
+            {
+            'param_kernel': masked_array(data = ['poly', 'poly', 'rbf', 'rbf'],
+                                         mask = [False False False False]...)
+            'param_gamma': masked_array(data = [-- -- 0.1 0.2],
+                                        mask = [ True  True False False]...),
+            'param_degree': masked_array(data = [2.0 3.0 -- --],
+                                         mask = [False False  True  True]...),
+            'split0_test_score'  : [0.80, 0.70, 0.80, 0.93],
+            'split1_test_score'  : [0.82, 0.50, 0.70, 0.78],
+            'mean_test_score'    : [0.81, 0.60, 0.75, 0.85],
+            'std_test_score'     : [0.01, 0.10, 0.05, 0.08],
+            'rank_test_score'    : [2, 4, 3, 1],
+            'split0_train_score' : [0.80, 0.92, 0.70, 0.93],
+            'split1_train_score' : [0.82, 0.55, 0.70, 0.87],
+            'mean_train_score'   : [0.81, 0.74, 0.70, 0.90],
+            'std_train_score'    : [0.01, 0.19, 0.00, 0.03],
+            'mean_fit_time'      : [0.73, 0.63, 0.43, 0.49],
+            'std_fit_time'       : [0.01, 0.02, 0.01, 0.01],
+            'mean_score_time'    : [0.01, 0.06, 0.04, 0.04],
+            'std_score_time'     : [0.00, 0.00, 0.00, 0.01],
+            'params'             : [{'kernel': 'poly', 'degree': 2}, ...],
+            }
+
+        NOTE
+
+        The key ``'params'`` is used to store a list of parameter
+        settings dicts for all the parameter candidates.
+
+        The ``mean_fit_time``, ``std_fit_time``, ``mean_score_time`` and
+        ``std_score_time`` are all in seconds.
+
+        For multi-metric evaluation, the scores for all the scorers are
+        available in the ``cv_results_`` dict at the keys ending with that
+        scorer's name (``'_<scorer_name>'``) instead of ``'_score'`` shown
+        above. ('split0_test_precision', 'mean_train_precision' etc.)
+
     best_estimator_ : estimator
-        Estimator that was chosen by the search, i.e. estimator which gave
-        highest score (or smallest loss if specified) on the left out data.
-        Not available if ``refit=False``.
+        Estimator that was chosen by the search, i.e. estimator
+        which gave highest score (or smallest loss if specified)
+        on the left out data. Not available if ``refit=False``.
+
+        See ``refit`` parameter for more information on allowed values.
 
     best_score_ : float
         Mean cross-validated score of the best_estimator.
+
+        For multi-metric evaluation, this is present only if ``refit`` is
+        specified.
+
+        This attribute is not available if ``refit`` is a function.
 
     best_params_ : dict
         Parameter setting that gave the best results on the hold out data.
@@ -159,6 +220,10 @@ class OptunaSearchCV(BaseSearchCV):
     multimetric_ : bool
         Whether or not the scorers compute several metrics.
 
+    classes_ : ndarray of shape (n_classes,)
+        Class labels. Only available when `refit=True` and the underlying
+        estimator is a classifier.
+
     study_ : optuna.study.Study
         The Optuna study object containing all trials and optimization history.
 
@@ -166,10 +231,10 @@ class OptunaSearchCV(BaseSearchCV):
         The list of all trials executed during the search.
 
     n_features_in_ : int
-        Number of features seen during :term:`fit`.
+        Number of features seen during [fit](https://scikit-learn.org/stable/glossary.html#term-fit).
 
     feature_names_in_ : ndarray of shape (`n_features_in_`,)
-        Names of features seen during :term:`fit`. Defined only when `X`
+        Names of features seen during [fit](https://scikit-learn.org/stable/glossary.html#term-fit). Defined only when `X`
         has feature names that are all strings.
 
     Examples
@@ -188,7 +253,7 @@ class OptunaSearchCV(BaseSearchCV):
     ...     SVC(),
     ...     param_distributions,
     ...     n_trials=20,
-    ...     sampler=Sampler(optuna.samplers.TPESampler, seed=42),
+    ...     sampler=Sampler(sampler=optuna.samplers.TPESampler, seed=42),
     ... )
     >>> search.fit(X, y)
     OptunaSearchCV(...)
@@ -200,17 +265,9 @@ class OptunaSearchCV(BaseSearchCV):
         **BaseSearchCV._parameter_constraints,
         "n_trials": [Interval(Integral, 1, None, closed="left"), None],
         "timeout": [Interval(Real, 0, None, closed="neither"), None],
-        "study": [optuna.study.Study, None],
         "sampler": [Sampler, None],
         "storage": [Storage, None],
-        "enable_pruning": ["boolean"],
-        "max_iter": [Interval(Integral, 1, None, closed="left")],
-        "subsample": [
-            Interval(Real, 0.0, 1.0, closed="right"),
-            Interval(Integral, 1, None, closed="left"),
-        ],
-        "callbacks": [list, None],
-        "catch": [tuple],
+        "callbacks": [dict, None],
     }
 
     def __init__(
@@ -218,23 +275,18 @@ class OptunaSearchCV(BaseSearchCV):
         estimator,
         param_distributions,
         *,
-        cv=None,
         scoring=None,
+        sampler=None,
+        storage=None,
+        callbacks=None,
+        n_trials=10,
+        timeout=None,
         n_jobs=None,
         refit=True,
+        cv=None,
         verbose=0,
         error_score=np.nan,
         return_train_score=False,
-        n_trials=10,
-        timeout=None,
-        study=None,
-        sampler=None,
-        storage=None,
-        enable_pruning=False,
-        max_iter=10,
-        subsample=1.0,
-        callbacks=None,
-        catch=(),
     ):
         super().__init__(
             estimator=estimator,
@@ -248,25 +300,45 @@ class OptunaSearchCV(BaseSearchCV):
         )
         self.param_distributions = param_distributions
         self.n_trials = n_trials
-        self.timeout = timeout
-        self.study = study
         self.sampler = sampler
         self.storage = storage
-        self.enable_pruning = enable_pruning
-        self.max_iter = max_iter
-        self.subsample = subsample
+        self.timeout = timeout
         self.callbacks = callbacks
-        self.catch = catch
 
-    def _run_search(self, evaluate_candidates):
-        """Search all candidates by running Optuna optimization.
+    def fit(self, X, y=None, *, study=None, **params):
+        """Run fit with all sets of parameters.
 
         Parameters
         ----------
-        evaluate_candidates : callable
-            A function that evaluates a list of parameter dictionaries and
-            returns a dict of arrays containing the scores.
+        X : array-like of shape (n_samples, n_features)
+            Training vectors, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+
+        y : array-like of shape (n_samples, n_output) or (n_samples,), default=None
+            Target relative to X for classification or regression;
+            None for unsupervised learning.
+
+        study : optuna.study.Study, default=None
+            An existing Optuna study to continue optimization from. If None, a new
+            study will be created.
+
+        **params : dict of str -> object
+            Parameters passed to the `fit` method of the estimator, the scorer,
+            and the CV splitter.
+
+        Returns
+        -------
+        self : object
+            Instance of fitted estimator.
         """
+        estimator = self.estimator
+        X, y = indexable(X, y)
+        scorers, refit_metric = super()._get_scorers()
+        self.scorer_ = scorers
+        self.multimetric_ = not (
+            callable(self.scoring) or self.scoring is None or isinstance(self.scoring, str | bytes)
+        )
+
         # Validate param_distributions
         for param_name, distribution in self.param_distributions.items():
             if not isinstance(distribution, BaseDistribution):
@@ -274,6 +346,21 @@ class OptunaSearchCV(BaseSearchCV):
                     f"Parameter '{param_name}' has an invalid distribution. "
                     f"Expected optuna.distributions.BaseDistribution, got {type(distribution)}."
                 )
+
+        # Handle metadata routing
+        routed_params = self._get_routed_params_for_fit(params)
+
+        fit_params = params
+        groups = params.get("groups")
+        if "estimator" in routed_params and "fit" in routed_params["estimator"]:
+            fit_params = routed_params["estimator"]["fit"]
+
+        # Store the study if provided, otherwise clear previous study
+        if study is not None:
+            self.study_ = study
+        else:
+            # Reset study for fresh fit
+            self.study_ = None
 
         # Instantiate sampler and storage from wrappers if provided
         sampler_instance = None
@@ -284,93 +371,53 @@ class OptunaSearchCV(BaseSearchCV):
         if self.storage is not None:
             storage_instance = self.storage.instantiate().instance_
 
+        # Validate and prepare callbacks
+        callback_list = None
+        if self.callbacks is not None:
+            if not isinstance(self.callbacks, dict):
+                raise TypeError(f"callbacks must be a dict of str to Callback, got {type(self.callbacks)}")
+            callback_list = []
+            for name, callback in self.callbacks.items():
+                if not isinstance(callback, Callback):
+                    raise TypeError(f"Callback '{name}' must be a Callback instance, got {type(callback)}")
+                callback.instantiate()
+                callback_list.append(callback)
+
         # Create or use existing study
-        if self.study is None:
+        if not hasattr(self, "study_") or self.study_ is None:
             study = optuna.create_study(
                 direction="maximize",
                 sampler=sampler_instance,
                 storage=storage_instance,
             )
         else:
-            study = self.study
+            study = self.study_
             if sampler_instance is not None:
                 study.sampler = sampler_instance
 
-        # Define objective function
-        def objective(trial):
-            # Suggest parameters using trial
-            params = {}
-            for param_name, distribution in self.param_distributions.items():
-                params[param_name] = trial._suggest(param_name, distribution)
-
-            # Store parameters in trial user attributes
-            for param_name, param_value in params.items():
-                trial.set_user_attr(f"param_{param_name}", param_value)
-
-            try:
-                # TODO: It seems `results` is global and gets extended on each call?
-                # TODO: How to handle this? I could take -1 index instead of 0, but is that reliable?
-                # Use BaseSearchCV's evaluate_candidates to evaluate the params
-                results = evaluate_candidates([params])
-
-                # Extract scores from results
-                # For multi-metric scoring, keys are like "mean_test_{metric_name}"
-                # For single metric, key is "mean_test_score"
-                if "mean_test_score" in results:
-                    # Single metric
-                    test_score = results["mean_test_score"][0]
-                    train_score = results.get("mean_train_score", [None])[0]
-                    trial.set_user_attr("mean_test_score", test_score)
-                    if train_score is not None:
-                        trial.set_user_attr("mean_train_score", train_score)
-                else:
-                    # Multi-metric - find primary metric to optimize
-                    # Use first metric key as default or the refit metric
-                    test_score_keys = [k for k in results if k.startswith("mean_test_")]
-                    if test_score_keys:
-                        primary_key = test_score_keys[0]
-                        test_score = results[primary_key][0]
-                        # Store all metrics in user attrs
-                        for key in test_score_keys:
-                            metric_name = key.replace("mean_test_", "")
-                            trial.set_user_attr(f"mean_test_{metric_name}", results[key][0])
-                    else:
-                        # Fallback if no test scores found
-                        test_score = 0.0
-
-                # Extract and store per-split scores
-                # Determine number of splits from results keys
-                split_keys = [key for key in results if key.startswith("split") and key.endswith("_test_score")]
-
-                for split_key in split_keys:
-                    split_test_score = results[split_key][0]
-                    trial.set_user_attr(split_key, split_test_score)
-
-                if self.return_train_score:
-                    train_split_keys = [
-                        key for key in results if key.startswith("split") and key.endswith("_train_score")
-                    ]
-                    for split_key in train_split_keys:
-                        split_train_score = results[split_key][0]
-                        trial.set_user_attr(split_key, split_train_score)
-
-                return test_score
-
-            except self.catch as e:
-                # Store exception info and return worst possible score
-                trial.set_user_attr("exception", str(e))
-                trial.set_user_attr("exception_type", type(e).__name__)
-                if isinstance(self.error_score, str) and self.error_score == "raise":
-                    raise
-                return self.error_score
+        # Create objective function
+        objective = _Objective(
+            estimator=estimator,
+            param_distributions=self.param_distributions,
+            X=X,
+            y=y,
+            cv=self.cv,
+            scorers=scorers,
+            fit_params=fit_params,
+            groups=groups,
+            verbose=self.verbose,
+            return_train_score=self.return_train_score,
+            error_score=self.error_score,
+            multimetric=self.multimetric_,
+            refit=self.refit,
+        )
 
         # Run optimization
         study.optimize(
             objective,
             n_trials=self.n_trials,
             timeout=self.timeout,
-            callbacks=self.callbacks,
-            catch=self.catch if self.catch else (),
+            callbacks=callback_list,
             n_jobs=self.n_jobs if self.n_jobs is not None else 1,
         )
 
@@ -378,108 +425,43 @@ class OptunaSearchCV(BaseSearchCV):
         self.study_ = study
         self.trials_ = study.trials
 
-        # Build cv_results_ from trials
-        self._build_cv_results()
+        # Build cv_results_ attribute from trials
+        self.cv_results_ = _build_cv_results(self.trials_, self.multimetric_, self.return_train_score)
 
-    def _build_cv_results(self):
-        """Build cv_results_ dict from Optuna trials."""
-        n_trials = len(self.trials_)
+        # If no completed trials, we can't find best params
+        if not self.cv_results_["params"] or len(self.cv_results_["params"]) == 0:
+            # This can happen if all trials failed
+            # We should probably follow BaseSearchCV behavior which leaves best_index_ unset?
+            # Or raise ValueError if refit=True
+            if self.refit:
+                raise ValueError("No trials were completed. 'refit' cannot be true.")
+            return self
 
-        # Initialize result arrays
-        results: dict[str, list | np.ndarray] = {
-            "mean_test_score": np.zeros(n_trials),
-            "std_test_score": np.zeros(n_trials),
-            "rank_test_score": np.zeros(n_trials, dtype=int),
-            "params": [],
-        }
+        # Find best parameters and refit
+        if self.refit or not self.multimetric_:
+            if callable(self.refit):
+                self.best_estimator_ = self.refit(self.cv_results_)
+            else:
+                if self.multimetric_:
+                    if isinstance(self.refit, str):
+                        self.best_index_ = self.cv_results_[f"rank_test_{self.refit}"].argmin()
+                        self.best_score_ = self.cv_results_[f"mean_test_{self.refit}"][self.best_index_]
+                    else:  # pragma: no cover
+                        # Unreachable due to BaseSearchCV validation
+                        pass
+                else:
+                    self.best_index_ = self.cv_results_["rank_test_score"].argmin()
+                    self.best_score_ = self.cv_results_["mean_test_score"][self.best_index_]
 
-        # Add per-split test scores
-        if n_trials > 0:
-            # Determine number of splits from first trial
-            split_keys = [
-                key for key in self.trials_[0].user_attrs if key.startswith("split") and key.endswith("_test_score")
-            ]
-            n_splits = len(split_keys)
+                self.best_params_ = self.cv_results_["params"][self.best_index_]
 
-            for split_idx in range(n_splits):
-                results[f"split{split_idx}_test_score"] = np.zeros(n_trials)
+                # Standard refit
+                if self.refit:
+                    self.best_estimator_ = clone(estimator).set_params(**self.best_params_)
+                    # Should we pop groups from fit_params?
+                    # BaseSearchCV does: self.best_estimator_.fit(X, y, **fit_params)
+                    # Metadata Routing usually handles this.
+                    # We pass fit_params as is.
+                    self.best_estimator_.fit(X, y, **fit_params)
 
-        # Add train scores if requested
-        if self.return_train_score:
-            results["mean_train_score"] = np.zeros(n_trials)
-            results["std_train_score"] = np.zeros(n_trials)
-
-            if n_trials > 0 and "split0_train_score" in self.trials_[0].user_attrs:
-                for split_idx in range(n_splits):
-                    results[f"split{split_idx}_train_score"] = np.zeros(n_trials)
-
-        # Fill in results from trials
-        params_list = cast(list, results["params"])
-        for trial_idx, trial in enumerate(self.trials_):
-            # Extract parameters
-            params = {}
-            for key, value in trial.user_attrs.items():
-                if key.startswith("param_"):
-                    param_name = key[6:]  # Remove "param_" prefix
-                    params[param_name] = value
-            params_list.append(params)
-
-            # Extract test scores
-            mean_test_score = trial.user_attrs.get("mean_test_score", np.nan)
-            results["mean_test_score"][trial_idx] = mean_test_score
-
-            # Extract per-split test scores and compute std
-            split_scores = []
-            for split_idx in range(n_splits):
-                score = trial.user_attrs.get(f"split{split_idx}_test_score", np.nan)
-                results[f"split{split_idx}_test_score"][trial_idx] = score
-                split_scores.append(score)
-
-            if split_scores:
-                results["std_test_score"][trial_idx] = np.std(split_scores)
-
-            # Extract train scores if available
-            if self.return_train_score:
-                mean_train_score = trial.user_attrs.get("mean_train_score", np.nan)
-                results["mean_train_score"][trial_idx] = mean_train_score
-
-                # Extract per-split train scores and compute std
-                split_train_scores = []
-                for split_idx in range(n_splits):
-                    score = trial.user_attrs.get(f"split{split_idx}_train_score", np.nan)
-                    if f"split{split_idx}_train_score" in results:
-                        results[f"split{split_idx}_train_score"][trial_idx] = score
-                    split_train_scores.append(score)
-
-                if split_train_scores:
-                    results["std_train_score"][trial_idx] = np.std(split_train_scores)
-
-        # Compute rankings (lower rank = better score)
-        mean_test_scores = np.asarray(results["mean_test_score"])
-        results["rank_test_score"] = np.argsort(-mean_test_scores) + 1
-
-        self.cv_results_ = results
-
-    @property
-    def classes_(self):
-        """Class labels (only available for classification).
-
-        Returns
-        -------
-        ndarray of shape (n_classes,)
-            The class labels.
-        """
-        check_is_fitted(self, "best_estimator_")
-        return self.best_estimator_.classes_
-
-    @property
-    def n_features_in_(self):
-        """Number of features seen during fit.
-
-        Returns
-        -------
-        int
-            Number of features.
-        """
-        check_is_fitted(self, "best_estimator_")
-        return self.best_estimator_.n_features_in_
+        return self

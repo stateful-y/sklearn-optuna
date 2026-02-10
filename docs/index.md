@@ -3,12 +3,10 @@
 
 # Welcome to Sklearn-Optuna's documentation
 
-An Optuna integration for hyperparameter tuning in Scikit-Learn
+`OptunaSearchCV` is a drop-in replacement for Scikit-Learn's `GridSearchCV` and `RandomizedSearchCV` powered by [Optuna](https://optuna.org/). It extends `BaseSearchCV`, so `fit()`, `score()`, `best_params_`, `cv_results_`, pipelines, and `clone()` all work out of the box. Optuna samplers (TPE, CMA-ES, …) explore search spaces more efficiently than grid or random search, while Optuna distributions give you log-scaled, bounded, and categorical parameter spaces.
 
-[Add 1-2 paragraphs explaining:
-- What this package integrates or provides
-- The main value proposition
-- Key use cases or target audience]
+!!! note "Inspiration"
+    This project is inspired by [optuna-integration's OptunaSearchCV](https://optuna-integration.readthedocs.io/en/latest/reference/generated/optuna_integration.OptunaSearchCV.html).
 
 <div class="grid cards" markdown>
 
@@ -16,36 +14,35 @@ An Optuna integration for hyperparameter tuning in Scikit-Learn
 
     ---
 
-    Install Sklearn-Optuna and [achieve first result]
+    Install Sklearn-Optuna and run your first hyperparameter search
 
-    Install → Initialize → Run → Done
+    Install → Define distributions → Fit → Done
 
     [Getting Started](pages/getting-started.md)
-
-- **Need Help?**
-
-    ---
-
-    Find answers to common questions and troubleshooting tips
-
-    [FAQ & Troubleshooting](pages/user-guide.md#troubleshooting)
 
 - **Learn the Concepts**
 
     ---
 
-    Understand [core concepts or how components work together]
+    Understand OptunaSearchCV, samplers, distributions, and callbacks
 
-    [Introduction](pages/user-guide.md) · [User guide](pages/user-guide.md)
-
+    [User Guide](pages/user-guide.md)
 
 - **See It In Action**
 
     ---
 
-    Explore a complete example [describe what the example demonstrates]
+    Explore 7 interactive notebooks from quickstart to pipelines
 
-    [Example Project](pages/examples.md)
+    [Examples](pages/examples.md)
+
+- **API Reference**
+
+    ---
+
+    Complete API documentation for OptunaSearchCV and wrapper classes
+
+    [API Reference](pages/api-reference.md)
 
 
 </div>
@@ -56,17 +53,17 @@ An Optuna integration for hyperparameter tuning in Scikit-Learn
 
 Step-by-step guide to installing and setting up Sklearn-Optuna in your project.
 
-- [1. [First Setup Step]](pages/getting-started.md#1-initializesetup-step)
-- [2. [Installation or Configuration]](pages/getting-started.md#2-configurecustomize-step)
-- [3. [Initialize/Configure Step]](pages/getting-started.md#3-executerun-step)
+- [1. Install the package](pages/getting-started.md#step-1-install-the-package)
+- [2. Verify installation](pages/getting-started.md#step-2-verify-installation)
+- [3. Basic usage](pages/getting-started.md#basic-usage)
 
 
-### [Example](pages/examples.md)
+### [Examples](pages/examples.md)
 
-A practical example demonstrating how to use Sklearn-Optuna in a real project.
+Interactive notebooks demonstrating real-world use cases.
 
-- [Project overview](pages/examples.md#what-can-project_name-do)
-- [Quick start](pages/examples.md#running-examples-locally)
+- [What can Sklearn-Optuna do?](pages/examples.md#what-can-sklearn-optuna-do)
+- [Running examples locally](pages/examples.md#running-examples-locally)
 
 
 ### [User guide](pages/user-guide.md)
