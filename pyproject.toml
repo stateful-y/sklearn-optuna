@@ -23,7 +23,7 @@ classifiers = [
 dependencies = [
     "scikit-learn>=1.6.0",
     "numpy>=1.26",
-    "optuna>=3.5,<4.0",
+    "optuna>=3.5",
     "sklearn-wrap",
 ]
 

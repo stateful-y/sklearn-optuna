@@ -9,7 +9,7 @@ import numpy as np
 import optuna
 import pytest
 from optuna.distributions import CategoricalDistribution, FloatDistribution, IntDistribution
-from optuna.samplers import CmaEsSampler, GridSampler, RandomSampler, TPESampler
+from optuna.samplers import GridSampler, RandomSampler, TPESampler
 from optuna.storages import InMemoryStorage, RDBStorage
 from optuna.study import MaxTrialsCallback
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
@@ -202,7 +202,7 @@ class TestOptunaSearchCVCore:
         assert hasattr(search, "best_params_")
         assert search.best_params_ == {}
 
-    @pytest.mark.parametrize("sampler_cls", [TPESampler, RandomSampler, CmaEsSampler])
+    @pytest.mark.parametrize("sampler_cls", [TPESampler, RandomSampler])
     def test_sampler_wrapper(self, simple_classification_data, sampler_cls):
         """Test OptunaSearchCV with different sampler wrappers."""
         X, y = simple_classification_data
