@@ -26,7 +26,7 @@ Learn more: [Optuna Distributions API](https://optuna.readthedocs.io/en/stable/r
 
 ### Compared to GridSearchCV / RandomizedSearchCV
 
-Scikit-learn's built-in searches are either exhaustive (grid) or uniformly random. `OptunaSearchCV` replaces them with sample-efficient algorithms — primarily TPE — that focus trials on promising regions of the search space. The API is identical: swap `GridSearchCV` for `OptunaSearchCV`, replace `param_grid` with `param_distributions` using Optuna distribution objects, and everything else (`cv`, `scoring`, `refit`, `n_jobs`, `cv_results_`) stays the same.
+Scikit-learn's built-in searches are either exhaustive (grid) or uniformly random. `OptunaSearchCV` replaces them with sample-efficient algorithms (primarily TPE) that focus trials on promising regions of the search space. The API is identical: swap `GridSearchCV` for `OptunaSearchCV`, replace `param_grid` with `param_distributions` using Optuna distribution objects, and everything else (`cv`, `scoring`, `refit`, `n_jobs`, `cv_results_`) stays the same.
 
 ### Compared to using Optuna directly
 
@@ -40,9 +40,9 @@ The existing `optuna_integration.OptunaSearchCV` provides similar functionality 
 
 ### OptunaSearchCV lifecycle
 
-1. **Construction** — You pass an estimator, `param_distributions`, and optional `Sampler`/`Storage`/`Callback` wrappers.
-2. **`fit(X, y)`** — Creates (or reuses) an Optuna study. Each trial suggests parameters from the distributions, clones the estimator, and runs `cross_validate`. Scores are stored as trial user attributes.
-3. **Results** — After optimization, `cv_results_` is built from trial data, `best_params_` / `best_score_` / `best_index_` are set, and (if `refit=True`) `best_estimator_` is trained on the full dataset.
+1. **Construction**: You pass an estimator, `param_distributions`, and optional `Sampler`/`Storage`/`Callback` wrappers.
+2. **`fit(X, y)`**: Creates (or reuses) an Optuna study. Each trial suggests parameters from the distributions, clones the estimator, and runs `cross_validate`. Scores are stored as trial user attributes.
+3. **Results**: After optimization, `cv_results_` is built from trial data, `best_params_` / `best_score_` / `best_index_` are set, and (if `refit=True`) `best_estimator_` is trained on the full dataset.
 
 ```python
 from sklearn_optuna import OptunaSearchCV
@@ -58,7 +58,7 @@ search.best_estimator_   # refitted model
 
 ### Wrapper classes: Sampler, Storage, Callback
 
-Optuna objects (samplers, storages, callbacks) are not Scikit-Learn-compatible by default — they lack `get_params()` / `set_params()`. Sklearn-Optuna provides thin wrappers (`Sampler`, `Storage`, `Callback`) that store the class and its constructor arguments separately. When `OptunaSearchCV` needs the actual object it calls `wrapper.instantiate()`.
+Optuna objects (samplers, storages, callbacks) are not Scikit-Learn-compatible by default: they lack `get_params()` / `set_params()`. Sklearn-Optuna provides thin wrappers (`Sampler`, `Storage`, `Callback`) that store the class and its constructor arguments separately. When `OptunaSearchCV` needs the actual object it calls `wrapper.instantiate()`.
 
 This design means wrappers survive `clone()` and can be tuned as hyperparameters in nested searches.
 

@@ -94,7 +94,7 @@ def _(mo):
 
     The inner `OptunaSearchCV` optimizes model hyperparameters and will be used as the final
     estimator in a pipeline. Setting `refit=False` avoids unnecessary refitting after each
-    inner optimization completes — the outer search doesn't need the fitted inner estimator,
+    inner optimization completes because the outer search doesn't need the fitted inner estimator,
     only its cross-validation performance. This saves computation in nested search scenarios.
     We keep `n_trials` low (3) because nested searches multiply computational costs:
     `outer_trials × inner_trials` total evaluations.
