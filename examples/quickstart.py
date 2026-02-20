@@ -18,21 +18,6 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    # OptunaSearchCV Quickstart
-
-    **Overview**
-    This quickstart demonstrates the fastest path from data to an optimized model using
-    `OptunaSearchCV`. In just a few lines, you'll run a hyperparameter search powered by
-    Optuna's TPE sampler, which intelligently explores the search space to find better
-    parameters faster than grid or random search. The API is identical to sklearn's
-    `GridSearchCV` and `RandomizedSearchCV`, making it a drop-in replacement.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 async def _():
     import sys
 
@@ -59,6 +44,24 @@ def _():
         make_classification,
         optuna,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    # OptunaSearchCV Quickstart
+
+    ## What You'll Learn
+
+    - How to set up and run `OptunaSearchCV` as a drop-in replacement for sklearn search estimators
+    - How to define search spaces using Optuna distributions
+    - How to read best parameters and score from the completed search
+
+    ## Prerequisites
+
+    Basic familiarity with scikit-learn's fit/predict API and hyperparameter tuning concepts.
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -147,13 +150,15 @@ def _(mo, search):
 def _(mo):
     mo.md("""
     ## Key Takeaways
-    - `OptunaSearchCV` works like other sklearn search estimators.
-    - Optuna distributions define a flexible search space.
-    - `best_params_` and `best_score_` summarize the best trial.
+
+    - **Drop-in replacement** -- `OptunaSearchCV` works like other sklearn search estimators
+    - **Flexible search spaces** -- Optuna distributions define continuous, discrete, and categorical parameters
+    - **Standard results** -- `best_params_` and `best_score_` summarize the best trial
 
     ## Next Steps
-    - See advanced search spaces for conditional parameters.
-    - Explore callbacks to stop runs early.
+
+    - **Study management**: See study_management.py for resuming and reusing optimization runs
+    - **Callbacks**: See callbacks.py to stop runs early with custom stopping criteria
     """)
     return
 

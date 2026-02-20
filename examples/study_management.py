@@ -17,20 +17,6 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    # Study Management
-
-    **Overview**
-    Learn how to reuse Optuna studies across multiple `OptunaSearchCV` runs. This enables
-    resuming optimization from checkpoints, comparing different configurations with the same
-    study, and maintaining reproducible experiment histories. By passing an existing study
-    to `fit()`, you can continue trials without starting from scratch.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 async def _():
     import sys
 
@@ -56,6 +42,24 @@ def _():
         make_classification,
         optuna,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    # Study Management
+
+    ## What You'll Learn
+
+    - How to create an Optuna study manually and pass it to `OptunaSearchCV`
+    - How to resume optimization from prior trials without starting from scratch
+    - How to maintain reproducible experiment histories across runs
+
+    ## Prerequisites
+
+    Familiarity with the OptunaSearchCV quickstart (see quickstart.py).
+    """)
+    return
 
 
 @app.cell
@@ -122,8 +126,14 @@ def _(mo, search):
 def _(mo):
     mo.md("""
     ## Key Takeaways
-    - You can create an Optuna Study manually and pass it to `fit(study=...)`.
-    - This allows pausing/resuming searches or sharing studies across runs.
+
+    - **Study reuse** -- Create an Optuna Study manually and pass it to `fit(study=...)` to accumulate trials
+    - **Resume optimization** -- Pausing and resuming searches or sharing studies across runs avoids redundant computation
+
+    ## Next Steps
+
+    - **Visualizations**: See visualization.py to plot optimization history and parameter importance
+    - **Callbacks**: See callbacks.py to add custom stopping criteria to your searches
     """)
     return
 

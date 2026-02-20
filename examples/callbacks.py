@@ -17,21 +17,6 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    # Callbacks
-
-    **Overview**
-    Learn how to use Optuna callbacks to control optimization behavior in `OptunaSearchCV`.
-    Callbacks are invoked at the end of each trial and can implement custom stopping criteria,
-    logging, or other side effects. This example demonstrates using `MaxTrialsCallback` to
-    stop the search early after a certain number of completed trials, useful for quick
-    experimentation or conditional stopping logic.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 async def _():
     import sys
 
@@ -60,6 +45,24 @@ def _():
         make_classification,
         optuna,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    # Callbacks
+
+    ## What You'll Learn
+
+    - How to wrap Optuna callbacks with sklearn-optuna's `Callback` wrapper
+    - How to pass a dictionary of callbacks to `OptunaSearchCV`
+    - How callbacks can override default stopping behavior (e.g., early stopping)
+
+    ## Prerequisites
+
+    Familiarity with the OptunaSearchCV quickstart (see quickstart.py).
+    """)
+    return
 
 
 @app.cell
@@ -135,10 +138,14 @@ def _(
 
 
 @app.cell
-def _(mo, search):
+def _(search):
     # Check how many trials actually ran
     n_trials_run = len(search.study_.trials)
+    return (n_trials_run,)
 
+
+@app.cell(hide_code=True)
+def _(mo, n_trials_run):
     mo.md(f"Requested trials: 20\nActual trials run: {n_trials_run}")
     return
 
@@ -147,9 +154,15 @@ def _(mo, search):
 def _(mo):
     mo.md("""
     ## Key Takeaways
-    - Wrap Optuna callbacks with `Callback`.
-    - Pass a dictionary of callbacks to `OptunaSearchCV`.
-    - Useful for stopping criteria beyond simple trial counts or timeout.
+
+    - **Callback wrapper** -- Wrap Optuna callbacks with `Callback` for sklearn compatibility
+    - **Dictionary interface** -- Pass a dictionary of callbacks to `OptunaSearchCV`
+    - **Custom stopping** -- Useful for stopping criteria beyond simple trial counts or timeout
+
+    ## Next Steps
+
+    - **Nested pipelines**: See nested_pipeline.py for advanced optimization patterns with pipelines
+    - **Metadata routing**: See metadata_routing.py to route sample weights through the search
     """)
     return
 
