@@ -54,7 +54,7 @@ search.cv_results_       # full results dict
 search.best_estimator_   # refitted model
 ```
 
-**Example:** See the [Quickstart notebook](/examples/quickstart/) for a complete walkthrough.
+**Example:** See the Quickstart notebook ([View](/examples/quickstart/) | [Editable](/examples/quickstart/edit/)) for a complete walkthrough.
 
 ### Wrapper classes: Sampler, Storage, Callback
 
@@ -115,7 +115,7 @@ search = OptunaSearchCV(
 )
 ```
 
-**Example:** See the [Callbacks notebook](/examples/callbacks/) for early stopping patterns.
+**Example:** See the Callbacks notebook ([View](/examples/callbacks/) | [Editable](/examples/callbacks/edit/)) for early stopping patterns.
 
 ### Study persistence and reuse
 
@@ -133,7 +133,7 @@ search.fit(X, y)
 search.fit(X, y, study=search.study_)
 ```
 
-**Example:** See the [Study Management notebook](/examples/study_management/) for reproducibility patterns.
+**Example:** See the Study Management notebook ([View](/examples/study_management/) | [Editable](/examples/study_management/edit/)) for reproducibility patterns.
 
 ### Multi-metric scoring
 
@@ -147,7 +147,7 @@ search = OptunaSearchCV(
 )
 ```
 
-**Example:** See the [Metadata Routing notebook](/examples/metadata_routing/) for advanced scoring patterns with `sample_weight`.
+**Example:** See the Metadata Routing notebook ([View](/examples/metadata_routing/) | [Editable](/examples/metadata_routing/edit/)) for advanced scoring patterns with `sample_weight`.
 
 ### Training scores and error handling
 
@@ -176,7 +176,7 @@ param_distributions = {
 search = OptunaSearchCV(pipe, param_distributions, n_trials=20)
 ```
 
-**Example:** See the [Nested Pipeline notebook](/examples/nested_pipeline/) for advanced nested search patterns.
+**Example:** See the Nested Pipeline notebook ([View](/examples/nested_pipeline/) | [Editable](/examples/nested_pipeline/edit/)) for advanced nested search patterns.
 
 ## Configuration
 
@@ -238,7 +238,7 @@ Yes. `OptunaSearchCV` is a valid Scikit-Learn estimator. You can use it as a ste
 
 The study is available as `search.study_` and the trial list as `search.trials_`. You can pass `search.study_` to Optuna's visualization functions directly.
 
-**Example:** See the [Visualization notebook](/examples/visualization/) for plotting optimization history and parameter importance.
+**Example:** See the Visualization notebook ([View](/examples/visualization/) | [Editable](/examples/visualization/edit/)) for plotting optimization history and parameter importance.
 
 ### Can I resume a previous search?
 

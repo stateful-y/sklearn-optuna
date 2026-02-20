@@ -17,20 +17,6 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    # Visualization
-
-    **Overview**
-    Visualize optimization history using Optuna's built-in plotting functions. After running
-    `OptunaSearchCV`, access the `study_` attribute to generate interactive plots that reveal
-    how the search progressed, which hyperparameters matter most, and how parameters interact.
-    These visualizations help debug search configurations and communicate results effectively.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 async def _():
     import sys
 
@@ -56,6 +42,24 @@ def _():
         make_classification,
         optuna,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    # Visualization
+
+    ## What You'll Learn
+
+    - How to access the Optuna `study_` attribute from a completed `OptunaSearchCV`
+    - How to generate optimization history and contour plots using Optuna's visualization module
+    - How to interpret search progress and parameter relationships
+
+    ## Prerequisites
+
+    Familiarity with the OptunaSearchCV quickstart (see quickstart.py). Plotly is used for interactive plots.
+    """)
+    return
 
 
 @app.cell
@@ -123,8 +127,14 @@ def _(optuna, search):
 def _(mo):
     mo.md("""
     ## Key Takeaways
-    - Access `search.study_` to get the Optuna Study object.
-    - Pass `search.study_` to standard Optuna visualization functions.
+
+    - **Study access** -- Use `search.study_` to get the Optuna Study object after fitting
+    - **Built-in plots** -- Pass `search.study_` to standard Optuna visualization functions for interactive Plotly figures
+
+    ## Next Steps
+
+    - **Callbacks**: See callbacks.py to stop trials early based on custom criteria
+    - **Nested pipelines**: See nested_pipeline.py for advanced optimization patterns
     """)
     return
 

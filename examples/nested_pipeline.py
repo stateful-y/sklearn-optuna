@@ -18,24 +18,6 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    # Nested OptunaSearchCV in Pipelines
-
-    **Overview**
-    Demonstrate an advanced pattern where `OptunaSearchCV` is used as a final
-    estimator in a pipeline that is itself tuned by another `OptunaSearchCV`.
-    This example shows how to tune both preprocessing choices and the sampler
-    parameters of the inner search.
-
-    **⚠️ Performance Note:** Nested searches multiply computational costs
-    (`outer_trials × inner_trials` evaluations). Use this pattern sparingly
-    and with minimal trial counts for exploratory work.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 async def _():
     import sys
 
@@ -69,6 +51,28 @@ def _():
         make_classification,
         optuna,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    # Nested OptunaSearchCV in Pipelines
+
+    ## What You'll Learn
+
+    - How to nest `OptunaSearchCV` as a final estimator inside a pipeline tuned by another `OptunaSearchCV`
+    - How to use double-underscore syntax to tune inner search parameters (e.g., sampler settings)
+    - The computational trade-offs of nested optimization
+
+    ## Prerequisites
+
+    Familiarity with the OptunaSearchCV quickstart (see quickstart.py) and sklearn pipelines.
+
+    **Performance Note:** Nested searches multiply computational costs
+    (`outer_trials x inner_trials` evaluations). Use this pattern sparingly
+    and with minimal trial counts for exploratory work.
+    """)
+    return
 
 
 @app.cell
@@ -205,16 +209,17 @@ def _(mo, outer_search):
 def _(mo):
     mo.md("""
     ## Key Takeaways
-    - `OptunaSearchCV` can be nested inside pipelines tuned by another `OptunaSearchCV`.
-    - Use `refit=False` on inner searches to save computation time.
-    - Access nested parameters with double-underscore syntax (`classifier__sampler__param`).
-    - Sampler parameters like `n_startup_trials` can be tuned as hyperparameters.
-    - Keep trial counts minimal due to multiplicative computational costs.
+
+    - **Nesting** -- `OptunaSearchCV` can be nested inside pipelines tuned by another `OptunaSearchCV`
+    - **Refit control** -- Use `refit=False` on inner searches to save computation time
+    - **Nested parameters** -- Access nested parameters with double-underscore syntax (`classifier__sampler__param`)
+    - **Sampler tuning** -- Sampler parameters like `n_startup_trials` can be tuned as hyperparameters
+    - **Cost awareness** -- Keep trial counts minimal due to multiplicative computational costs
 
     ## Next Steps
-    - Try tuning other sampler parameters like `seed` or different sampler types.
-    - Experiment with nested searches in ensemble meta-estimators.
-    - Consider whether nested optimization is necessary for your use case.
+
+    - **Metadata routing**: See metadata_routing.py to route sample weights through `OptunaSearchCV`
+    - **Sampler exploration**: Try tuning other sampler parameters or different sampler types
     """)
     return
 

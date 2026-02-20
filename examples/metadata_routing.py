@@ -18,21 +18,6 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    # Metadata Routing with sample_weight
-
-    **Overview**
-    Demonstrate how to use scikit-learn's metadata routing to pass `sample_weight`
-    through `OptunaSearchCV` to both model fitting and scoring. This is essential
-    for handling imbalanced datasets or when different samples have varying importance.
-
-    Metadata routing requires scikit-learn ≥1.4 and must be explicitly enabled.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 async def _():
     import sys
 
@@ -68,6 +53,25 @@ def _():
         make_scorer,
         sklearn,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    # Metadata Routing with sample_weight
+
+    ## What You'll Learn
+
+    - How to enable and configure scikit-learn's metadata routing for `sample_weight`
+    - How to route metadata through `OptunaSearchCV` to both model fitting and scoring
+    - How to set up multi-metric scoring with different routing preferences
+    - How to handle metadata routing in pipelines with mixed requirements
+
+    ## Prerequisites
+
+    Familiarity with the OptunaSearchCV quickstart (see quickstart.py) and scikit-learn metadata routing (requires sklearn >= 1.4).
+    """)
+    return
 
 
 @app.cell(hide_code=True)
@@ -294,18 +298,19 @@ def _(mo, search_pipe):
 def _(mo):
     mo.md("""
     ## Key Takeaways
-    - Enable metadata routing with `sklearn.config_context(enable_metadata_routing=True)`.
-    - Use `.set_fit_request(sample_weight=True)` and `.set_score_request(sample_weight=True)`
-      to configure estimators.
-    - Pass metadata as keyword arguments to `fit()`: `search.fit(X, y, sample_weight=weights)`.
-    - Different scorers can have different routing preferences in multi-metric scenarios.
-    - In pipelines, each step can independently configure its metadata requirements.
-    - Sample weights are essential for handling imbalanced datasets properly.
+
+    - **Enable routing** -- Use `sklearn.config_context(enable_metadata_routing=True)` to activate metadata routing
+    - **Request configuration** -- Use `.set_fit_request(sample_weight=True)` and `.set_score_request(sample_weight=True)` on estimators
+    - **Pass as kwargs** -- Pass metadata as keyword arguments to `fit()`: `search.fit(X, y, sample_weight=weights)`
+    - **Mixed routing** -- Different scorers can have different routing preferences in multi-metric scenarios
+    - **Pipeline support** -- Each pipeline step can independently configure its metadata requirements
+    - **Imbalanced data** -- Sample weights are essential for handling imbalanced datasets properly
 
     ## Next Steps
-    - Explore other metadata like `groups` for GroupKFold cross-validation.
-    - Try custom metadata for domain-specific information.
-    - Combine metadata routing with callbacks for advanced workflows.
+
+    - **Group cross-validation**: Explore routing `groups` for GroupKFold cross-validation
+    - **Custom metadata**: Try custom metadata for domain-specific information
+    - **Callbacks**: Combine metadata routing with callbacks for advanced workflows (see callbacks.py)
     """)
     return
 
