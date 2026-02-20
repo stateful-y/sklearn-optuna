@@ -70,7 +70,7 @@ def _(mo):
     ## 1. Prepare Data and Estimator
 
     Create a classification dataset and initialize a scikit-learn estimator. The estimator
-    can be any sklearn-compatible model — here we use LogisticRegression as a simple example.
+    can be any sklearn-compatible model. Here we use LogisticRegression as a simple example.
     OptunaSearchCV will tune its hyperparameters automatically.
     """)
     return
