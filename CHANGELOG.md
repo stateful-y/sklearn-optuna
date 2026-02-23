@@ -17,8 +17,8 @@ This **minor release** includes 5 commits.
 - Reformulate docs text  ([#8](https://github.com/stateful-y/sklearn-optuna/pull/8)) by @gtauzin
 
 ### Miscellaneous Tasks
-- Update copier template to 0.13.2  ([#7](https://github.com/stateful-y/sklearn-optuna/pull/7)) by @gtauzin
-- Update from template  ([#11](https://github.com/stateful-y/sklearn-optuna/pull/11)) by @gtauzin
+- Update froom copier template 0.13.2  ([#7](https://github.com/stateful-y/sklearn-optuna/pull/7)) by @gtauzin
+- Update from copier template 0.13.4  ([#11](https://github.com/stateful-y/sklearn-optuna/pull/11)) by @gtauzin
 
 ### Contributors
 
