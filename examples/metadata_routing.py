@@ -4,6 +4,15 @@ Demonstrate how to use scikit-learn's metadata routing to pass sample_weight
 through OptunaSearchCV to both model fitting and scoring.
 """
 
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "numpy",
+#     "optuna",
+#     "scikit-learn",
+#     "sklearn-optuna",
+# ]
+# ///
 import marimo
 
 __generated_with = "0.19.9"
@@ -15,16 +24,6 @@ def _():
     import marimo as mo
 
     return (mo,)
-
-
-@app.cell(hide_code=True)
-async def _():
-    import sys
-
-    if "pyodide" in sys.modules:
-        import micropip
-        await micropip.install(["scikit-learn", "optuna", "sklearn-optuna"])
-    return
 
 
 @app.cell(hide_code=True)

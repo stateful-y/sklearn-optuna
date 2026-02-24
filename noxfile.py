@@ -242,6 +242,8 @@ def build_docs(session: nox.Session) -> None:
         "--no-default-groups",
         "--group",
         "docs",
+        "--group",
+        "examples",
         env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
     )
 
@@ -259,6 +261,8 @@ def serve_docs(session: nox.Session) -> None:
         "--no-default-groups",
         "--group",
         "docs",
+        "--group",
+        "examples",
         env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
     )
 

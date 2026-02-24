@@ -4,6 +4,14 @@ Demonstrate an advanced pattern where OptunaSearchCV is used as a final
 estimator in a pipeline that is itself tuned by another OptunaSearchCV.
 """
 
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "optuna",
+#     "scikit-learn",
+#     "sklearn-optuna",
+# ]
+# ///
 import marimo
 
 __generated_with = "0.19.9"
@@ -15,16 +23,6 @@ def _():
     import marimo as mo
 
     return (mo,)
-
-
-@app.cell(hide_code=True)
-async def _():
-    import sys
-
-    if "pyodide" in sys.modules:
-        import micropip
-        await micropip.install(["scikit-learn", "optuna", "sklearn-optuna"])
-    return
 
 
 @app.cell(hide_code=True)

@@ -3,6 +3,15 @@
 Visualize optimization history using Optuna's plotting functions.
 """
 
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "optuna",
+#     "plotly",
+#     "scikit-learn",
+#     "sklearn-optuna",
+# ]
+# ///
 import marimo
 
 __generated_with = "0.19.9"
@@ -14,16 +23,6 @@ def _():
     import marimo as mo
 
     return (mo,)
-
-
-@app.cell(hide_code=True)
-async def _():
-    import sys
-
-    if "pyodide" in sys.modules:
-        import micropip
-        await micropip.install(["scikit-learn", "optuna", "plotly", "sklearn-optuna"])
-    return
 
 
 @app.cell(hide_code=True)
