@@ -62,9 +62,7 @@ def on_pre_build(config):
     notebooks = [
         p
         for p in examples_dir.rglob("*.py")
-        if "__marimo__" not in p.parts
-        and "bugs" not in p.parts
-        and "__init__" not in p.name
+        if "__marimo__" not in p.parts and "bugs" not in p.parts and "__init__" not in p.name
     ]
     if not notebooks:
         return
@@ -119,6 +117,7 @@ def on_pre_build(config):
         msg = f"[hooks] {len(failed)} notebook(s) had cell execution errors:\n"
         msg += "\n".join(f"  - {f}" for f in failed)
         raise RuntimeError(msg)
+
 
 class _HtmlToMarkdown(HTMLParser):
     """HTML parser that converts mkdocs-material HTML to clean markdown."""
@@ -260,10 +259,7 @@ class _HtmlToMarkdown(HTMLParser):
         if self._skip_depth:
             self._skip_depth -= 1
             return
-        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
-            self._flush_line()
-            self._ensure_blank_line()
-        elif tag == "p":
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"} or tag == "p":
             self._flush_line()
             self._ensure_blank_line()
         elif tag in {"ul", "ol"}:
