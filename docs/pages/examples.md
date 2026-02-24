@@ -36,7 +36,7 @@ Discover advanced nested optimization patterns where `OptunaSearchCV` serves as 
 
 This walkthrough demonstrates tuning sampler parameters like `n_startup_trials` using nested parameter syntax and highlights the computational trade-offs of nested searches.
 
-### Metadata Routing with sample_weight ([View](/examples/metadata_routing/) | [Open in marimo](/examples/metadata_routing/edit/)))
+### Metadata Routing with sample_weight ([View](/examples/metadata_routing/) | [Open in marimo](/examples/metadata_routing/edit/))
 
 Handle imbalanced datasets by routing `sample_weight` through `OptunaSearchCV` to both model fitting and scoring. This example shows how to configure metadata routing for estimators, scorers, and pipelines.
 
