@@ -17,6 +17,11 @@ import marimo
 __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
+__gallery__ = {
+    "title": "Optuna Visualizations",
+    "description": "Turn completed studies into visual summaries of optimization history and parameter importance.",
+}
+
 
 @app.cell(hide_code=True)
 def _():

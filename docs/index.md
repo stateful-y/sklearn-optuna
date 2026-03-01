@@ -62,7 +62,7 @@ Step-by-step guide to installing and setting up Sklearn-Optuna in your project.
 
 Interactive notebooks demonstrating real-world use cases.
 
-- [What can Sklearn-Optuna do?](pages/examples.md#what-can-sklearn-optuna-do)
+- [Gallery](pages/examples.md#examples)
 - [Running examples locally](pages/examples.md#running-examples-locally)
 
 
@@ -74,7 +74,7 @@ In-depth documentation on the design, architecture, and core concepts.
 - [Configuration](pages/user-guide.md#configuration)
 - [Best Practices](pages/user-guide.md#best-practices)
 
-### [Reference](pages/api-reference.md)
+### [Reference](pages/api-reference/)
 
 Detailed reference for the Sklearn-Optuna API, including classes, functions, and configuration options.
 

@@ -259,6 +259,18 @@ class OptunaSearchCV(BaseSearchCV):
     OptunaSearchCV(...)
     >>> search.best_params_
     {...}
+
+    See Also
+    --------
+    sklearn_optuna.optuna.Sampler : Wrapper for Optuna samplers.
+    sklearn_optuna.optuna.Storage : Wrapper for Optuna storage backends.
+    sklearn_optuna.optuna.Callback : Wrapper for Optuna callbacks.
+
+    References
+    ----------
+    .. [1] Akiba, T., Sano, S., Yanase, T., Ohta, T., & Koyama, M. (2019).
+       Optuna: A Next-generation Hyperparameter Optimization Framework.
+       In KDD. https://doi.org/10.1145/3292500.3330701
     """
 
     _parameter_constraints = {

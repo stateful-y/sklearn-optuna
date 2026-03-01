@@ -16,6 +16,11 @@ import marimo
 __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
+__gallery__ = {
+    "title": "Study Management and Reproducibility",
+    "description": "Reuse an Optuna study to continue optimization runs and keep experiments reproducible.",
+}
+
 
 @app.cell(hide_code=True)
 def _():

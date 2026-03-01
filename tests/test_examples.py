@@ -34,5 +34,5 @@ def test_notebook_runs_without_error(notebook_file: pathlib.Path) -> None:
         check=False,
     )
     assert result.returncode == 0, (
-        f"Notebook {notebook_file.name} failed with:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        f"Notebook {notebook_file.name} failed with:\\nSTDOUT:\\n{result.stdout}\\nSTDERR:\\n{result.stderr}"
     )
