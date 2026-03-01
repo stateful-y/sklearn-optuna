@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.1.0-alpha.3] - 2026-03-01
+
+This **minor release** includes 2 commits.
+
+
+### Features
+- Replace WASM export with PEP 723 notebooks and marimo.app playground links  ([#14](https://github.com/stateful-y/sklearn-optuna/pull/14)) by @gtauzin
+
+### Miscellaneous Tasks
+- Update copier template to v0.15.0  ([#15](https://github.com/stateful-y/sklearn-optuna/pull/15)) by @gtauzin
+
+### Contributors
+
+Thanks to all contributors for this release:
+- @gtauzin
+
 ## [0.1.0-alpha.2] - 2026-02-23
 
 This **minor release** includes 5 commits.
