@@ -207,6 +207,7 @@ Run tests across multiple Python versions:
     ```bash
     uvx nox -s test
     ```
+
 Run example notebook tests:
 
 === "just"
@@ -229,6 +230,7 @@ Run example notebook tests:
 
 This runs all notebooks in the `examples/` directory as Python scripts in parallel using pytest-xdist (`-n auto`). Each notebook is executed non-interactively to validate it runs without errors.
 
+
 #### When to Mark Tests as Slow or Integration
 
 Mark your tests appropriately to help maintain fast feedback during development:
@@ -249,6 +251,7 @@ Mark your tests appropriately to help maintain fast feedback during development:
   - Validate example notebooks execute without errors
   - Run notebooks in the `examples/` directory
   - Test interactive documentation and tutorials
+
 
 Example:
 
@@ -454,17 +457,17 @@ Every example notebook **must** follow this structure in order:
 **Example intro cell**:
 
 ```markdown
-# OptunaSearchCV Quickstart
+# Reduction Forecasting with sklearn
 
 ## What You'll Learn
 
-- How to set up and run `OptunaSearchCV` as a drop-in replacement for sklearn search estimators
-- How to define search spaces using Optuna distributions
-- How to read best parameters and score from the completed search
+- How `PointReductionForecaster` tabularizes time series data using lag features
+- The difference between `target_transformer` and `feature_transformer` parameters
+- Tuning hyperparameters with `GridSearchCV`
 
 ## Prerequisites
 
-Basic familiarity with scikit-learn's fit/predict API and hyperparameter tuning concepts.
+Basic familiarity with sklearn's fit/predict API and time series concepts (trend, seasonality).
 ```
 
 #### Marimo Cell Conventions
@@ -491,20 +494,12 @@ Basic familiarity with scikit-learn's fit/predict API and hyperparameter tuning 
 
 #### Content Guidelines
 
-- **Gallery metadata**: Every example notebook should include a `__gallery__` variable after `app = marimo.App(...)` defining `title` and `description` for the example gallery:
-
-    ```python
-    __gallery__ = {
-        "title": "OptunaSearchCV Quickstart",
-        "description": "Run a fast hyperparameter search and read the best parameters and score.",
-    }
-    ```
-
+- **Gallery metadata**: Every example notebook should include a `__gallery__` variable in the first `@app.cell` defining `title`, `description`, and `category` for the example gallery.
 - **Markdown density**: Each numbered section should open with a descriptive markdown cell explaining the concept before any code cells. Consecutive code cells within the same section are acceptable when logically grouped.
 - **No emojis**: Do not use emojis anywhere in notebooks whether it is in headings, content bullets, or concluding remarks.
-- **API cross-links**: When mentioning sklearn_optuna classes or functions in markdown cells, wrap them in backtick-link syntax pointing to the API page (e.g., `` [`OptunaSearchCV`](/pages/api/generated/sklearn_optuna.search.OptunaSearchCV/) ``).
-- **Key Takeaways format**: Use bold for key terms with plain descriptions (e.g., `- **OptunaSearchCV** is a drop-in replacement for GridSearchCV powered by Optuna samplers`)
-- **Next Steps format**: Use bold labels with linked notebook references (e.g., `- **Callbacks**: See [`callbacks.py`](/examples/callbacks/) to learn about early stopping`). Always link to the rendered example page, not the raw file.
+- **API cross-links**: When mentioning sklearn_optuna classes or functions in markdown cells, wrap them in backtick-link syntax pointing to the API page (e.g., `` [`SeasonalNaive`](/pages/api/generated/sklearn_optuna.point.naive.SeasonalNaive/) ``).
+- **Key Takeaways format**: Use bold for key terms with plain descriptions (e.g., `- **Reduction forecasting** converts time series into tabular regression via lag features`)
+- **Next Steps format**: Use bold labels with linked notebook references (e.g., `- **Naive baselines**: See [`naive_forecasters.py`](/examples/point/naive_forecasters/) to compare`). Always link to the rendered example page, not the raw file.
 
 #### Testing and Documentation
 
@@ -528,7 +523,14 @@ Run the example test suite to verify your notebook passes:
     uv run pytest tests/test_examples.py -m example
     ```
 
-The mkdocs hooks automatically export notebooks to HTML during docs build and populate the gallery on the examples page from `__gallery__` metadata. All notebooks in `examples/` are automatically discovered and tested by `test_examples.py` using pytest's parametrization feature, which runs them in parallel for fast validation.
+Add a link to your example in `docs/pages/examples.md`:
+
+```markdown
+- [Example Name](../examples/<name>/) - Brief description
+```
+
+The mkdocs hooks automatically export notebooks to HTML during docs build. All notebooks in `examples/` are automatically discovered and tested by `test_examples.py` using pytest's parametrization feature, which runs them in parallel for fast validation.
+
 ## Submitting Changes
 
 1. Push your changes to your fork:
