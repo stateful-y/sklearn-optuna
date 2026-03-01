@@ -16,6 +16,11 @@ import marimo
 __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
+__gallery__ = {
+    "title": "Early Stopping with Callbacks",
+    "description": "Stop unneeded work early by adding Optuna callbacks to your search.",
+}
+
 
 @app.cell(hide_code=True)
 def _():

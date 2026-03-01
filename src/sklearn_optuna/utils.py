@@ -165,11 +165,22 @@ def _compute_rankings(results: dict[str, Any]) -> None:
 
     for key in mean_test_keys:
         scores = results[key]
-        # Use rankdata with method='min' to handle ties (same as sklearn)
-        # Negate scores because rankdata ranks in ascending order
-        ranks = rankdata(-scores, method="min")
-
         suffix = key[9:]  # remove "mean_test" -> leaves "_score" or "_metricname"
         rank_key = f"rank_test{suffix}"
 
-        results[rank_key] = ranks.astype(int)
+        nan_mask = np.isnan(scores)
+        if nan_mask.all():
+            # All scores are NaN (all trials failed)
+            results[rank_key] = np.ones(len(scores), dtype=int)
+        elif nan_mask.any():
+            # Mix of valid and NaN: rank only valid scores, assign last rank to NaN
+            valid_scores = scores[~nan_mask]
+            valid_ranks = rankdata(-valid_scores, method="min").astype(int)
+            int_ranks = np.empty(len(scores), dtype=int)
+            int_ranks[~nan_mask] = valid_ranks
+            int_ranks[nan_mask] = int(valid_ranks.max()) + 1
+            results[rank_key] = int_ranks
+        else:
+            # No NaN: rank directly
+            ranks = rankdata(-scores, method="min")
+            results[rank_key] = ranks.astype(int)

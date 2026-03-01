@@ -15,11 +15,18 @@ class Sampler(BaseClassWrapper):
     **params : dict
         Parameters to pass to the sampler constructor.
 
+    See Also
+    --------
+    sklearn_optuna.search.OptunaSearchCV : The main search class that uses samplers.
+    sklearn_optuna.optuna.Storage : Wrapper for Optuna storage backends.
     """
 
     _estimator_name = "sampler"
     _estimator_base_class = optuna.samplers.BaseSampler
     _estimator_default_class = optuna.samplers.TPESampler
+
+    def __init__(self, sampler: type = optuna.samplers.TPESampler, **params) -> None:
+        super().__init__(sampler=sampler, **params)
 
 
 class Storage(BaseClassWrapper):
@@ -33,11 +40,18 @@ class Storage(BaseClassWrapper):
     **params : dict
         Parameters to pass to the storage constructor.
 
+    See Also
+    --------
+    sklearn_optuna.search.OptunaSearchCV : The main search class that uses storage.
+    sklearn_optuna.optuna.Sampler : Wrapper for Optuna samplers.
     """
 
     _estimator_name = "storage"
     _estimator_base_class = optuna.storages.BaseStorage
     _estimator_default_class = optuna.storages.RDBStorage
+
+    def __init__(self, storage: type = optuna.storages.RDBStorage, **params) -> None:
+        super().__init__(storage=storage, **params)
 
 
 class Callback(BaseClassWrapper):
@@ -51,6 +65,11 @@ class Callback(BaseClassWrapper):
 
     **params : dict
         Parameters to pass to the callback constructor.
+
+    See Also
+    --------
+    sklearn_optuna.search.OptunaSearchCV : The main search class that uses callbacks.
+    sklearn_optuna.optuna.Sampler : Wrapper for Optuna samplers.
 
     Examples
     --------

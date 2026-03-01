@@ -17,6 +17,11 @@ import marimo
 __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
+__gallery__ = {
+    "title": "Nested OptunaSearchCV in Pipelines",
+    "description": "Tune preprocessing choices and sampler parameters simultaneously with nested optimization.",
+}
+
 
 @app.cell(hide_code=True)
 def _():

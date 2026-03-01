@@ -17,6 +17,11 @@ import marimo
 __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
+__gallery__ = {
+    "title": "OptunaSearchCV Quickstart",
+    "description": "Run a fast hyperparameter search and read the best parameters and score.",
+}
+
 
 @app.cell(hide_code=True)
 def _():

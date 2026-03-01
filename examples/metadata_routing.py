@@ -18,6 +18,11 @@ import marimo
 __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
+__gallery__ = {
+    "title": "Metadata Routing with sample_weight",
+    "description": "Handle imbalanced datasets by routing sample_weight through OptunaSearchCV to both fitting and scoring.",
+}
+
 
 @app.cell(hide_code=True)
 def _():
