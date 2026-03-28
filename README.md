@@ -113,7 +113,7 @@ We welcome contributions, feedback, and questions:
 - **Join the discussion**: [GitHub Discussions](https://github.com/stateful-y/sklearn-optuna/discussions)
 - **Contributing Guide**: [CONTRIBUTING.md](https://github.com/stateful-y/sklearn-optuna/blob/main/CONTRIBUTING.md)
 
-If you are interested in becoming a maintainer or taking a more active role, please reach out to Guillaume Tauzin on [stateful-y.io contact page](https://stateful-y.io/contact).
+If you are interested in becoming a maintainer or taking a more active role, please reach out to Guillaume Tauzin on [GitHub Discussions](https://github.com/stateful-y/sklearn-optuna/discussions).
 
 ## Where can I learn more?
 
@@ -125,6 +125,10 @@ For questions and discussions, you can also open a [discussion](https://github.c
 ## License
 
 This project is licensed under the terms of the [Apache-2.0 License](https://github.com/stateful-y/sklearn-optuna/blob/main/LICENSE).
+
+## Acknowledgements
+
+This project is maintained by [stateful-y](https://stateful-y.io), an ML consultancy specializing in MLOps and data science & engineering. If you're interested in collaborating or learning more about our services, please visit our website.
 
 <p align="center">
   <a href="https://stateful-y.io">
