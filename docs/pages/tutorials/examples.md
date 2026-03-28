@@ -20,5 +20,5 @@ uv run marimo edit examples/quickstart.py
 
 ## Next Steps
 
-- Browse the [API Reference](api-reference.md) for detailed documentation
-- Check the [User Guide](user-guide.md) to understand core concepts
+- Browse the [API Reference](../reference/api.md) for detailed documentation
+- Read [Concepts and Architecture](../explanation/concepts.md) to understand the design
