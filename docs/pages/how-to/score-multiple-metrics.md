@@ -9,6 +9,10 @@ accuracy alongside F1 score, precision, or any other metric.
 - sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+!!! tip "Interactive version available"
+    Try this guide as an interactive notebook:
+    [View](/examples/score_multiple_metrics/) · [Open in marimo](/examples/score_multiple_metrics/edit/)
+
 ## Pass Multiple Scorers
 
 Provide a list of scorer names to `scoring` and set `refit` to the metric used

@@ -95,7 +95,7 @@ def _build_members_tables(package_name, module_name, members):
 
     Produces a markdown string with ``### Classes`` and ``### Functions``
     sections, each containing a markdown table with links to dedicated
-    pages under ``generated/``, matching the yohou submodule page style.
+    pages under ``generated/``, matching the submodule page style.
     """
     sections = []
 
@@ -853,8 +853,7 @@ def _process_api_page_content(html, page, config):
     if examples_h2:
         old = examples_h2.group(0)
         new = (
-            old
-            .replace('<h2 id="examples">', '<h3 id="tutorials">')
+            old.replace('<h2 id="examples">', '<h3 id="tutorials">')
             .replace("</h2>", "</h3>")
             .replace(">Examples<", ">Tutorials<")
             .replace("#examples", "#tutorials")

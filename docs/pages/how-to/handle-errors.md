@@ -10,6 +10,10 @@ not converge.
 - sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+!!! tip "Interactive version available"
+    Try this guide as an interactive notebook:
+    [View](/examples/handle_errors/) · [Open in marimo](/examples/handle_errors/edit/)
+
 ## Control Behavior on Fit Failures
 
 By default, `OptunaSearchCV` records `NaN` for failing trials and continues

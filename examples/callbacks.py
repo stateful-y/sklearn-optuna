@@ -39,7 +39,7 @@ def _():
     from sklearn.datasets import make_classification
     from sklearn.svm import SVC
 
-    from sklearn_optuna import Callback, OptunaSearchCV, Sampler
+    from sklearn_optuna import Callback, OptunaSearchCV
 
     return (
         Callback,
@@ -146,45 +146,6 @@ def _(search):
 @app.cell(hide_code=True)
 def _(mo, n_trials_run):
     mo.md(f"Requested trials: 20\nActual trials run: {n_trials_run}")
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## 3. Multiple Callbacks
-
-    If you need multiple stopping criteria, pass additional entries
-    to the callbacks dictionary. Each callback is checked after
-    every trial.
-    """)
-    return
-
-
-@app.cell
-def _(Callback, FloatDistribution, MaxTrialsCallback, OptunaSearchCV, SVC, X, optuna, y):
-    from optuna.terminator.callback import TerminatorCallback
-
-    multi_search = OptunaSearchCV(
-        SVC(),
-        {"C": FloatDistribution(0.1, 10.0, log=True)},
-        callbacks={
-            "max_trials": Callback(
-                MaxTrialsCallback,
-                n_trials=10,
-                states=(optuna.trial.TrialState.COMPLETE,),
-            ),
-            "terminator": Callback(TerminatorCallback),
-        },
-        n_trials=50,
-    )
-    multi_search.fit(X, y)
-    return (multi_search,)
-
-
-@app.cell(hide_code=True)
-def _(mo, multi_search):
-    mo.md(f"""Trials run with multiple callbacks: {len(multi_search.study_.trials)}""")
     return
 
 

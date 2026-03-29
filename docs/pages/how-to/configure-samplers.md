@@ -9,6 +9,10 @@ algorithm or need reproducible results.
 - sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+!!! tip "Interactive version available"
+    Try this guide as an interactive notebook:
+    [View](/examples/configure_samplers/) · [Open in marimo](/examples/configure_samplers/edit/)
+
 ## Choose a Sampler
 
 Wrap any Optuna sampler with the `Sampler` class to make it compatible with
