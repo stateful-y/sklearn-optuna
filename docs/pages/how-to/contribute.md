@@ -285,8 +285,8 @@ Follow these conventions when writing tests:
 The CI pipeline uses a two-tier testing strategy optimized for fast feedback:
 
 1. **Fast tests** (`test-fast` job): Runs on minimum and maximum Python versions (3.11, 3.14) only:
-   - **Draft PRs**: Ubuntu only - Quick feedback in ~2-3 minutes
-   - **Ready PRs/Main**: All OS - Ubuntu, Windows, macOS - Cross-platform validation
+   - **Draft PRs**: Ubuntu only, for quick feedback in ~2-3 minutes
+   - **Ready PRs/Main**: All OS (Ubuntu, Windows, macOS) for cross-platform validation
 
 2. **Full test suite** (`test-full` job): Runs all tests (fast + slow + integration) on Ubuntu across all Python versions (3.11-3.14) when the PR is not in draft mode or on the main branch. This comprehensive validation includes coverage reporting on the minimum supported Python version.
 
@@ -445,7 +445,7 @@ Create a new marimo notebook in `examples/<name>.py`:
 
 #### Required Structure
 
-Notebooks serve **tutorials** or **how-to guides** only - never explanation or reference. The structure depends on the quadrant:
+Notebooks serve **tutorials** or **how-to guides** only, never explanation or reference. The structure depends on the quadrant:
 
 **Tutorial notebooks** (category: `tutorial`):
 
@@ -459,7 +459,7 @@ Notebooks serve **tutorials** or **how-to guides** only - never explanation or r
 1. **Title**: `# How to [Verb] [Object]`
 2. **Prerequisites**: One-liner stating required prior knowledge
 3. **Numbered sections**: `## 1. Section Name`, `## 2. Section Name`, etc. with action-only prose
-4. No closing summary - the notebook ends after the last step
+4. No closing summary. The notebook ends after the last step
 
 **Example intro cell (tutorial)**:
 
