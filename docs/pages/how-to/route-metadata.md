@@ -91,3 +91,10 @@ search.fit(X, y, clf__sample_weight=weights)
 ```
 
 Use the `step__param` syntax to target metadata at a specific pipeline step.
+
+## See Also
+
+- [Score Multiple Metrics](score-multiple-metrics.md) - use multiple scorers with metadata routing
+- [Use in Pipelines](use-in-pipelines.md) - general pipeline integration
+- [API Reference](../reference/api.md) - full parameter documentation
+- [Concepts and Architecture](../explanation/concepts.md) - how OptunaSearchCV integrates with scikit-learn
