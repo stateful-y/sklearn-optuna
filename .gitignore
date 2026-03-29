@@ -78,7 +78,6 @@ examples/__marimo__/
 .ruff_cache/
 
 # build
-uv.lock
 src/sklearn_optuna/_version.py
 
 # Documentation examples
