@@ -21,6 +21,7 @@ __gallery__ = {
     "title": "How to Visualize Optimization History",
     "description": "Plot optimization progress and parameter relationships from a completed search.",
     "category": "how-to",
+    "companion": "pages/how-to/visualize-results.md",
 }
 
 

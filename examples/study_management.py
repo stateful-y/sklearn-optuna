@@ -118,7 +118,13 @@ def _(FloatDistribution, LogisticRegression, OptunaSearchCV, X, study, y):
 @app.cell(hide_code=True)
 def _(mo, search):
     mo.md(f"""
-    Study name: {search.study_.study_name}
+    **Study name:** {search.study_.study_name}
+
+    **Total trials:** {len(search.study_.trials)}
+
+    **Best trial number:** {search.study_.best_trial.number}
+
+    **Best score:** {search.study_.best_value:.3f}
     """)
     return
 

@@ -21,6 +21,7 @@ __gallery__ = {
     "title": "How to Route Sample Weights Through OptunaSearchCV",
     "description": "Pass sample_weight through OptunaSearchCV to both fitting and scoring.",
     "category": "how-to",
+    "companion": "pages/how-to/route-metadata.md",
 }
 
 
@@ -153,9 +154,7 @@ def _(mo, search):
     mo.md(f"""
     **Best Parameters:** `C = {search.best_params_['C']:.4f}`
     **Best Weighted Score:** `{search.best_score_:.3f}`
-
-    The model was trained and evaluated using balanced sample weights,
-    giving equal importance to both classes despite the 9:1 imbalance.
+    **Trials run:** `{len(search.cv_results_['params'])}`
     """)
     return
 
@@ -221,10 +220,8 @@ def _(
 def _(mo, search_multi):
     mo.md(f"""
     **Best Parameters:** `C = {search_multi.best_params_['C']:.4f}`
-    **Weighted Accuracy:** `{search_multi.best_score_:.3f}`
-
-    The search optimized for weighted accuracy while also tracking unweighted
-    accuracy. Check `cv_results_` for both metrics across all trials.
+    **Weighted Accuracy:** `{search_multi.cv_results_['mean_test_weighted_accuracy'][search_multi.best_index_]:.3f}`
+    **Unweighted Accuracy:** `{search_multi.cv_results_['mean_test_unweighted_accuracy'][search_multi.best_index_]:.3f}`
     """)
     return
 

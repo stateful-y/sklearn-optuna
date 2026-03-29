@@ -70,12 +70,6 @@ def _(mo):
     OptunaSearchCV quickstart
     ([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/))
     and sklearn pipelines.
-
-    /// warning
-    Nested searches multiply computational cost
-    (`outer_trials x inner_trials` evaluations). Keep trial counts
-    low for exploratory work.
-    ///
     """)
     return
 
@@ -98,8 +92,7 @@ def _(mo):
     ## 1. Create the Inner Search
 
     Build an `OptunaSearchCV` that optimizes model hyperparameters.
-    Keep `n_trials` low because the outer search will run this
-    multiple times.
+    Set `n_trials=3` to keep the nested search fast.
     """)
     return
 
@@ -193,11 +186,8 @@ def _(mo, outer_search):
 
     **Best Cross-Validated Score:** `{outer_search.best_score_:.3f}`
 
-    **Total Trials:** `{len(outer_search.study_.trials)}`
-
-    The outer search evaluated {len(outer_search.study_.trials)} combinations,
-    with each running {outer_search.best_estimator_.named_steps['classifier'].n_trials}
-    inner trials.
+    **Total Outer Trials:** `{len(outer_search.study_.trials)}`
+    **Inner Trials per Outer:** `{outer_search.best_estimator_.named_steps['classifier'].n_trials}`
     """)
     return
 
