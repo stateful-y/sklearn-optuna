@@ -135,7 +135,7 @@ step in a `Pipeline` or wrap a `Pipeline` with it. See
 The study is available as `search.study_` and the trial list as
 `search.trials_`. You can pass `search.study_` to Optuna's visualization
 functions directly. See the
-[Visualization example notebook](/examples/visualization/) for plotting
+Visualization example notebook ([View](/examples/visualization/) · [Open in marimo](/examples/visualization/edit/)) for plotting
 optimization history and parameter importance.
 
 ### Can I resume a previous search?

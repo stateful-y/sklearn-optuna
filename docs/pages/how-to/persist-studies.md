@@ -1,5 +1,9 @@
 # How to Persist and Resume Studies
 
+!!! tip "Interactive notebook"
+    See the companion notebook for a runnable example.
+    [View](/examples/study_management/) · [Open in marimo](/examples/study_management/edit/)
+
 This guide shows you how to save optimization results to a database and resume
 a search from where it left off. Use this when experiments are long-running or
 you want to build on previous results.
@@ -59,5 +63,4 @@ search = OptunaSearchCV(
 ## See Also
 
 - [API Reference](../reference/api.md) - full wrapper API
-- [Study Management example notebook](/examples/study_management/) - interactive persistence patterns
 - [Concepts and Architecture](../explanation/concepts.md) - how wrappers work

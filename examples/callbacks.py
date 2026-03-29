@@ -1,6 +1,6 @@
-"""Callbacks.
+"""How to Stop Optimization Early with Callbacks.
 
-Learn how to use Optuna callbacks in OptunaSearchCV.
+Stop unneeded work early by adding Optuna callbacks to OptunaSearchCV.
 """
 
 # /// script
@@ -17,8 +17,10 @@ __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
 __gallery__ = {
-    "title": "Early Stopping with Callbacks",
+    "title": "How to Stop Optimization Early with Callbacks",
     "description": "Stop unneeded work early by adding Optuna callbacks to your search.",
+    "category": "how-to",
+    "companion": "pages/how-to/use-callbacks.md",
 }
 
 
@@ -53,17 +55,14 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    # Callbacks
+    # How to Stop Optimization Early with Callbacks
 
-    ## What You'll Learn
+    This notebook shows how to stop optimization early by adding
+    Optuna callbacks to `OptunaSearchCV`.
 
-    - How to wrap Optuna callbacks with sklearn-optuna's `Callback` wrapper
-    - How to pass a dictionary of callbacks to `OptunaSearchCV`
-    - How callbacks can override default stopping behavior (e.g., early stopping)
-
-    ## Prerequisites
-
-    Familiarity with the OptunaSearchCV quickstart (see quickstart.py).
+    **Prerequisites:** Familiarity with the
+    OptunaSearchCV quickstart
+    ([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)).
     """)
     return
 
@@ -80,12 +79,10 @@ def _(make_classification):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 1. Using MaxTrialsCallback
+    ## 1. Wrap the Callback
 
-    Wrap Optuna's `MaxTrialsCallback` using sklearn-optuna's `Callback` wrapper. This makes
-    the callback compatible with sklearn's `get_params()` and `set_params()` interface, allowing
-    it to survive cloning. The callback stops optimization after a specified number of completed
-    trials, even if `n_trials` is set higher.
+    Wrap Optuna's `MaxTrialsCallback` with the `Callback` wrapper
+    for sklearn compatibility.
     """)
     return
 
@@ -102,10 +99,9 @@ def _(mo):
     mo.md("""
     ## 2. Pass to OptunaSearchCV
 
-    Pass a dictionary of callbacks to `OptunaSearchCV` using the `callbacks=` parameter. Each
-    callback is instantiated and invoked at the end of every trial. Here, the callback will
-    stop the search after 5 completed trials, even though `n_trials=20` is specified. This
-    demonstrates how callbacks can override default stopping behavior.
+    Pass a dictionary of callbacks to `OptunaSearchCV` via the
+    `callbacks=` parameter. The callback stops the search after
+    5 completed trials, even though `n_trials=20`.
     """)
     return
 
@@ -150,23 +146,6 @@ def _(search):
 @app.cell(hide_code=True)
 def _(mo, n_trials_run):
     mo.md(f"Requested trials: 20\nActual trials run: {n_trials_run}")
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Key Takeaways
-
-    - **Callback wrapper** -- Wrap Optuna callbacks with `Callback` for sklearn compatibility
-    - **Dictionary interface** -- Pass a dictionary of callbacks to `OptunaSearchCV`
-    - **Custom stopping** -- Useful for stopping criteria beyond simple trial counts or timeout
-
-    ## Next Steps
-
-    - **Nested pipelines**: See nested_pipeline.py for advanced optimization patterns with pipelines
-    - **Metadata routing**: See metadata_routing.py to route sample weights through the search
-    """)
     return
 
 

@@ -1,5 +1,9 @@
 # Getting Started
 
+!!! tip "Interactive notebook"
+    Follow along in the Quickstart notebook for a hands-on version of this tutorial.
+    [View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)
+
 In this tutorial, we will run an Optuna-powered hyperparameter search using
 scikit-learn's familiar `fit()` / `best_params_` API. Along the way, we will
 install the package, define an Optuna search space, create an `OptunaSearchCV`

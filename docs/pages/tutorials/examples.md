@@ -1,6 +1,6 @@
 # Examples
 
-Explore real-world applications of Sklearn-Optuna through interactive examples.
+Interactive notebooks grouped by purpose: **Tutorials** walk through a topic step-by-step, while **How-to Guides** solve a specific task.
 Each notebook is available in two formats: **View** for static reading, and **Open in marimo** for an interactive notebook that runs in the marimo playground.
 
 <!-- GALLERY -->

@@ -1,6 +1,6 @@
-"""Visualization.
+"""How to Visualize Optimization History.
 
-Visualize optimization history using Optuna's plotting functions.
+Plot optimization progress and parameter relationships from a completed search.
 """
 
 # /// script
@@ -18,8 +18,9 @@ __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
 __gallery__ = {
-    "title": "Optuna Visualizations",
-    "description": "Turn completed studies into visual summaries of optimization history and parameter importance.",
+    "title": "How to Visualize Optimization History",
+    "description": "Plot optimization progress and parameter relationships from a completed search.",
+    "category": "how-to",
 }
 
 
@@ -51,17 +52,16 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    # Visualization
+    # How to Visualize Optimization History
 
-    ## What You'll Learn
+    This notebook shows how to retrieve the Optuna `study_` from a
+    completed `OptunaSearchCV` and plot optimization history and
+    parameter contours.
 
-    - How to access the Optuna `study_` attribute from a completed `OptunaSearchCV`
-    - How to generate optimization history and contour plots using Optuna's visualization module
-    - How to interpret search progress and parameter relationships
-
-    ## Prerequisites
-
-    Familiarity with the OptunaSearchCV quickstart (see quickstart.py). Plotly is used for interactive plots.
+    **Prerequisites:** Familiarity with the
+    OptunaSearchCV quickstart
+    ([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)). Plotly is
+    used for interactive plots.
     """)
     return
 
@@ -76,12 +76,9 @@ def _(make_classification):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 1. Run Search
+    ## 1. Run a Search
 
-    Run a hyperparameter search with multiple trials to generate enough data for meaningful
-    visualizations. The more trials you run, the clearer the patterns in the optimization history
-    and parameter relationships will be. Here we use a RandomForestClassifier with two hyperparameters
-    to demonstrate different visualization types.
+    Run a search with enough trials to produce meaningful plots.
     """)
     return
 
@@ -103,12 +100,9 @@ def _(IntDistribution, OptunaSearchCV, RandomForestClassifier, X, y):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 2. Visualize Results
+    ## 2. Plot the Results
 
-    Use Optuna's visualization module to create interactive Plotly figures. The optimization
-    history plot shows how objective values improved over trials, revealing convergence patterns
-    and potential plateaus. The contour plot displays the relationship between pairs of hyperparameters,
-    showing which regions of the search space yield better performance.
+    Pass `search.study_` to Optuna's visualization functions.
     """)
     return
 
@@ -124,22 +118,6 @@ def _(optuna, search):
 def _(optuna, search):
     fig_contour = optuna.visualization.plot_contour(search.study_)
     fig_contour
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Key Takeaways
-
-    - **Study access** -- Use `search.study_` to get the Optuna Study object after fitting
-    - **Built-in plots** -- Pass `search.study_` to standard Optuna visualization functions for interactive Plotly figures
-
-    ## Next Steps
-
-    - **Callbacks**: See callbacks.py to stop trials early based on custom criteria
-    - **Nested pipelines**: See nested_pipeline.py for advanced optimization patterns
-    """)
     return
 
 

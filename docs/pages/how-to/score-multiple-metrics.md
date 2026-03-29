@@ -77,5 +77,5 @@ search.fit(X, y, sample_weight=weights)
 ## See Also
 
 - [API Reference](../reference/api.md) - full parameter documentation
-- [Metadata Routing example notebook](/examples/metadata_routing/) - advanced scoring with sample weights
+- Metadata Routing example notebook: [View](/examples/metadata_routing/) · [Open in marimo](/examples/metadata_routing/edit/) - advanced scoring with sample weights
 - [Configuration Reference](../reference/configuration.md) - all `scoring` and `refit` options

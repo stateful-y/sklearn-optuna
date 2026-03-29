@@ -1,5 +1,9 @@
 # How to Use Callbacks
 
+!!! tip "Interactive notebook"
+    See the companion notebook for a runnable example.
+    [View](/examples/callbacks/) · [Open in marimo](/examples/callbacks/edit/)
+
 This guide shows you how to attach callbacks to control optimization behavior.
 Use this when you need to stop the search early, log progress, or implement
 custom stopping criteria.
@@ -83,5 +87,4 @@ search = OptunaSearchCV(
 ## See Also
 
 - [API Reference](../reference/api.md) - full wrapper API
-- [Callbacks example notebook](/examples/callbacks/) - interactive early stopping patterns
 - [Concepts and Architecture](../explanation/concepts.md) - how wrappers work

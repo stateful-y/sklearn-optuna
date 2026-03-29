@@ -1,5 +1,9 @@
 # How to Use in Pipelines
 
+!!! tip "Interactive notebook"
+    See the companion notebook for a runnable example.
+    [View](/examples/nested_pipeline/) · [Open in marimo](/examples/nested_pipeline/edit/)
+
 This guide shows you how to use `OptunaSearchCV` with scikit-learn pipelines.
 Use this when you need to tune hyperparameters of estimators inside a pipeline,
 or nest `OptunaSearchCV` as a pipeline step.
@@ -84,5 +88,4 @@ search.fit(X, y)
 ## See Also
 
 - [API Reference](../reference/api.md) - full parameter documentation
-- [Nested Pipeline example notebook](/examples/nested_pipeline/) - advanced nested search patterns
 - [Concepts and Architecture](../explanation/concepts.md) - how OptunaSearchCV integrates with scikit-learn
