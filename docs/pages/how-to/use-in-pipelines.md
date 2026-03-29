@@ -85,6 +85,13 @@ search = OptunaSearchCV(pipe, param_distributions, n_trials=30)
 search.fit(X, y)
 ```
 
+## Manage Computational Cost
+
+Nested searches multiply the total number of evaluations. An outer search with
+10 trials wrapping an inner search with 5 trials produces 50 total evaluations
+(plus cross-validation folds). Keep `n_trials` low on the inner search and
+increase only after initial exploration.
+
 ## See Also
 
 - [API Reference](../reference/api.md) - full parameter documentation

@@ -146,8 +146,10 @@ nav:
     - Configure Samplers: pages/how-to/configure-samplers.md
     - Use Callbacks: pages/how-to/use-callbacks.md
     - Persist and Resume Studies: pages/how-to/persist-studies.md
+    - Route Metadata: pages/how-to/route-metadata.md
     - Score Multiple Metrics: pages/how-to/score-multiple-metrics.md
     - Use in Pipelines: pages/how-to/use-in-pipelines.md
+    - Visualize Results: pages/how-to/visualize-results.md
     - Handle Errors: pages/how-to/handle-errors.md
     - Troubleshooting: pages/how-to/troubleshooting.md
     - Contributing: pages/how-to/contribute.md

@@ -115,6 +115,14 @@ def _(optuna, search):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    Plot the parameter contour to identify high-performing regions.
+    """)
+    return
+
+
 @app.cell
 def _(optuna, search):
     fig_contour = optuna.visualization.plot_contour(search.study_)

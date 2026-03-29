@@ -137,7 +137,9 @@ def _(mo):
     ## 3. Run the Outer Search
 
     Use double-underscore syntax to tune nested parameters like
-    `classifier__sampler__n_startup_trials`.
+    `classifier__sampler__n_startup_trials`. If you need to tune
+    additional inner parameters, add them with the same prefix
+    (e.g. `classifier__C`).
     """)
     return
 
