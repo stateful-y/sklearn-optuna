@@ -18,7 +18,14 @@ an objective function, and stores results. Optuna provides sample-efficient
 algorithms (TPE, CMA-ES) and persistence via pluggable storage backends.
 
 The challenge is that these two systems have incompatible assumptions about how
-objects are constructed, cloned, and parameterized.
+objects are constructed, cloned, and parameterized. Scikit-Learn requires every
+object to expose its constructor arguments through `get_params()` so that
+`clone()` can reconstruct it, and `set_params()` can modify it. Optuna objects
+like `TPESampler` or `RDBStorage` do not implement this protocol: they hold
+internal state (RNG history, database connections) that is not exposed as
+constructor kwargs, cannot be serialized, and cannot be reconstructed from
+parameters alone. Without a bridge layer, Scikit-Learn cannot clone, route
+parameters through, or nest Optuna objects in pipelines.
 
 ## How OptunaSearchCV Works
 
@@ -55,8 +62,9 @@ Optuna's samplers, storage backends, and callbacks are plain Python objects.
 They do not implement `get_params()` or `set_params()`, which means Scikit-Learn
 cannot clone them, serialize them, or route parameters through them.
 
-The `Sampler`, `Storage`, and `Callback` wrappers solve this by storing the
-**class** and its **constructor arguments** separately:
+The `Sampler`, `Storage`, and `Callback` wrappers solve this using
+[Sklearn-Wrap](https://github.com/stateful-y/sklearn-wrap)'s `BaseClassWrapper`,
+which stores the **class** and its **constructor arguments** separately:
 
 ```python
 from sklearn_optuna import Sampler
@@ -108,6 +116,17 @@ CV folds) compete for CPU resources and often slow things down due to overhead.
 For CPU-bound workloads, this means the effective parallelism is at the trial
 level, not the fold level.
 
+### Multi-node optimization
+
+Because Optuna studies can be shared through a database backend, you can
+distribute trials across multiple machines. Each node runs its own
+`OptunaSearchCV.fit()` pointing to the same `Storage` and `study_name`, and
+Optuna coordinates trial suggestions automatically. See
+[How to Persist and Resume Studies](../how-to/persist-studies.md) for storage
+setup and Optuna's
+[distributed optimization guide](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html#multi-node-optimization)
+for the full pattern.
+
 ## Limitations
 
 - **No pruning**: Optuna's pruning API (early stopping of unpromising trials)
@@ -117,10 +136,11 @@ level, not the fold level.
   (`direction="maximize"`). Multi-objective Pareto optimization requires using
   Optuna directly.
 
-- **Threading-based parallelism**: Parallel trials use threading, not
-  multiprocessing. For most Scikit-Learn estimators that release the GIL during
-  fitting, this works well. For pure-Python estimators, `n_jobs=1` may be
-  faster.
+- **Threading-based parallelism**: Parallel trials on a single machine use
+  threading, not multiprocessing. For true multi-process or multi-node parallelism,
+  use a shared database storage so each process or machine runs its own
+  `OptunaSearchCV.fit()` against the same study (see
+  [Multi-node optimization](#multi-node-optimization) above).
 
 ## FAQ
 

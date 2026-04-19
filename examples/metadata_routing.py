@@ -262,6 +262,7 @@ def _(
             ("scaler", scaler),
             ("classifier", lr_pipe),
         ])
+        pipe.set_score_request(sample_weight=True)  # Route weights to pipeline scoring
 
         search_pipe = OptunaSearchCV(
             pipe,

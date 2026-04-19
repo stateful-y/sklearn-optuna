@@ -22,7 +22,7 @@ Solutions to common problems when using Sklearn-Optuna.
 : The estimator may be failing silently. Set `error_score="raise"` to surface the underlying error. See [How to Handle Errors](handle-errors.md#raise-on-failure).
 
 **Problem: Search is slow**
-: Reduce `n_trials` or set a `timeout` to cap execution time. Check that `cv` is not set to a large number of folds. Consider using `n_jobs=-1` for parallel trial execution.
+: Reduce `n_trials` or set a `timeout` to cap execution time. Check that `cv` is not set to a large number of folds. Consider using `n_jobs=-1` for parallel trial execution on a single machine, or distribute trials across multiple nodes with a shared database storage (see [Concepts: Multi-node optimization](../explanation/concepts.md#multi-node-optimization)).
 
 **Problem: CMA-ES sampler raises an error**
 : CMA-ES does not support `CategoricalDistribution` parameters. Use `TPESampler` for mixed search spaces.

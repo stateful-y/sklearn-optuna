@@ -2,7 +2,7 @@
 
 This guide shows you how to choose and configure Optuna samplers for your
 hyperparameter search. Use this when you want to control the optimization
-algorithm or need reproducible results.
+algorithm.
 
 ## Prerequisites
 
@@ -16,7 +16,9 @@ algorithm or need reproducible results.
 ## Choose a Sampler
 
 Wrap any Optuna sampler with the `Sampler` class to make it compatible with
-Scikit-Learn's `get_params()` / `set_params()` / `clone()` API:
+Scikit-Learn's `get_params()` / `set_params()` / `clone()` API. See the
+[Optuna samplers overview](https://optuna.readthedocs.io/en/stable/reference/samplers/index.html)
+for a full comparison of available algorithms.
 
 ```python
 from sklearn_optuna import OptunaSearchCV, Sampler
