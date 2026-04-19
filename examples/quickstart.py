@@ -20,6 +20,8 @@ app = marimo.App(width="medium")
 __gallery__ = {
     "title": "OptunaSearchCV Quickstart",
     "description": "Run a fast hyperparameter search and read the best parameters and score.",
+    "category": "tutorial",
+    "companion": "pages/tutorials/getting-started.md",
 }
 
 
@@ -54,15 +56,12 @@ def _(mo):
     mo.md("""
     # OptunaSearchCV Quickstart
 
-    ## What You'll Learn
+    In this notebook, we will run a hyperparameter search using
+    `OptunaSearchCV` and inspect the best parameters and score.
+    Along the way, we will define a search space with Optuna
+    distributions and see how the results API works.
 
-    - How to set up and run `OptunaSearchCV` as a drop-in replacement for sklearn search estimators
-    - How to define search spaces using Optuna distributions
-    - How to read best parameters and score from the completed search
-
-    ## Prerequisites
-
-    Basic familiarity with scikit-learn's fit/predict API and hyperparameter tuning concepts.
+    **Prerequisites:** Basic familiarity with scikit-learn's fit/predict API.
     """)
     return
 
@@ -72,9 +71,9 @@ def _(mo):
     mo.md("""
     ## 1. Prepare Data and Estimator
 
-    Create a classification dataset and initialize a scikit-learn estimator. The estimator
-    can be any sklearn-compatible model. Here we use LogisticRegression as a simple example.
-    OptunaSearchCV will tune its hyperparameters automatically.
+    We start by creating a classification dataset and initializing a
+    LogisticRegression estimator. `OptunaSearchCV` will tune its
+    hyperparameters automatically.
     """)
     return
 
@@ -102,10 +101,9 @@ def _(mo):
     mo.md("""
     ## 2. Define a Search Space
 
-    Define the hyperparameter search space using Optuna distributions. Here we tune the
-    regularization parameter `C` with `FloatDistribution` using log-scale, which is ideal
-    for parameters that span several orders of magnitude. Optuna distributions replace
-    sklearn's `param_grid` or `param_distributions`.
+    Now we define the hyperparameter search space. We use
+    `FloatDistribution` with log-scale for the regularization
+    parameter `C`.
     """)
     return
 
@@ -145,6 +143,9 @@ def _(mo, search):
     mo.md(f"""
     **Best params:** {search.best_params_}
     **Best score:** {search.best_score_:.3f}
+
+    Notice that `best_params_` and `best_score_` work exactly like
+    scikit-learn's `GridSearchCV` -- the same attributes, the same format.
     """)
     return
 
@@ -152,16 +153,22 @@ def _(mo, search):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Key Takeaways
+    ## What We Built
 
-    - **Drop-in replacement** -- `OptunaSearchCV` works like other sklearn search estimators
-    - **Flexible search spaces** -- Optuna distributions define continuous, discrete, and categorical parameters
-    - **Standard results** -- `best_params_` and `best_score_` summarize the best trial
+    We ran a hyperparameter search with `OptunaSearchCV` and found
+    the best regularization parameter for a LogisticRegression.
+    Along the way, we:
 
-    ## Next Steps
+    - Defined a search space with `FloatDistribution`
+    - Ran the search with `OptunaSearchCV.fit()`
+    - Inspected `best_params_` and `best_score_`
 
-    - **Study management**: See study_management.py for resuming and reusing optimization runs
-    - **Callbacks**: See callbacks.py to stop runs early with custom stopping criteria
+    **Next steps:**
+
+    - How to resume optimization from prior trials:
+      [View](/examples/study_management/) · [Open in marimo](/examples/study_management/edit/)
+    - How to stop optimization early with callbacks:
+      [View](/examples/callbacks/) · [Open in marimo](/examples/callbacks/edit/)
     """)
     return
 

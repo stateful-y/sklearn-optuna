@@ -1,7 +1,6 @@
-"""Metadata Routing with sample_weight.
+"""How to Route Sample Weights Through OptunaSearchCV.
 
-Demonstrate how to use scikit-learn's metadata routing to pass sample_weight
-through OptunaSearchCV to both model fitting and scoring.
+Pass sample_weight through OptunaSearchCV to model fitting and scoring.
 """
 
 # /// script
@@ -19,8 +18,10 @@ __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
 __gallery__ = {
-    "title": "Metadata Routing with sample_weight",
-    "description": "Handle imbalanced datasets by routing sample_weight through OptunaSearchCV to both fitting and scoring.",
+    "title": "How to Route Sample Weights Through OptunaSearchCV",
+    "description": "Pass sample_weight through OptunaSearchCV to both fitting and scoring.",
+    "category": "how-to",
+    "companion": "pages/how-to/route-metadata.md",
 }
 
 
@@ -62,18 +63,16 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    # Metadata Routing with sample_weight
+    # How to Route Sample Weights Through OptunaSearchCV
 
-    ## What You'll Learn
+    This notebook shows how to enable scikit-learn's metadata routing
+    and pass `sample_weight` through `OptunaSearchCV` to fitting,
+    scoring, and pipelines.
 
-    - How to enable and configure scikit-learn's metadata routing for `sample_weight`
-    - How to route metadata through `OptunaSearchCV` to both model fitting and scoring
-    - How to set up multi-metric scoring with different routing preferences
-    - How to handle metadata routing in pipelines with mixed requirements
-
-    ## Prerequisites
-
-    Familiarity with the OptunaSearchCV quickstart (see quickstart.py) and scikit-learn metadata routing (requires sklearn >= 1.4).
+    **Prerequisites:** Familiarity with the
+    OptunaSearchCV quickstart
+    ([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/))
+    and scikit-learn metadata routing (requires sklearn >= 1.4).
     """)
     return
 
@@ -81,13 +80,10 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 1. Create Imbalanced Dataset
+    ## 1. Create an Imbalanced Dataset
 
-    Generate a classification dataset with significant class imbalance (90% class 0, 10% class 1).
-    Class imbalance is common in real-world problems and can lead to poor model performance if not
-    addressed. We compute balanced sample weights using sklearn's `compute_sample_weight`, which
-    assigns higher weights to minority class samples. These weights will be routed through
-    `OptunaSearchCV` to both the estimator's `fit()` method and the scorer.
+    Generate a dataset with 90/10 class imbalance and compute
+    balanced sample weights.
     """)
     return
 
@@ -113,11 +109,10 @@ def _(compute_sample_weight, make_classification):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 2. Enable Metadata Routing and Configure Estimator
+    ## 2. Enable Routing and Run a Search
 
-    Metadata routing must be explicitly enabled via sklearn's config context.
-    Then configure the estimator to request `sample_weight` for both fitting
-    and scoring.
+    Enable metadata routing, configure the estimator to request
+    `sample_weight`, and pass it to `fit()`.
     """)
     return
 
@@ -159,9 +154,7 @@ def _(mo, search):
     mo.md(f"""
     **Best Parameters:** `C = {search.best_params_['C']:.4f}`
     **Best Weighted Score:** `{search.best_score_:.3f}`
-
-    The model was trained and evaluated using balanced sample weights,
-    giving equal importance to both classes despite the 9:1 imbalance.
+    **Trials run:** `{len(search.cv_results_['params'])}`
     """)
     return
 
@@ -169,11 +162,10 @@ def _(mo, search):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 3. Multi-Metric Scoring with Different Routing
+    ## 3. Multi-Metric Scoring with Mixed Routing
 
-    Use multiple scorers with different metadata routing preferences. One scorer
-    uses sample weights (weighted accuracy) while another ignores them
-    (unweighted accuracy).
+    Create scorers with different routing preferences: one weighted,
+    one unweighted.
     """)
     return
 
@@ -228,10 +220,8 @@ def _(
 def _(mo, search_multi):
     mo.md(f"""
     **Best Parameters:** `C = {search_multi.best_params_['C']:.4f}`
-    **Weighted Accuracy:** `{search_multi.best_score_:.3f}`
-
-    The search optimized for weighted accuracy while also tracking unweighted
-    accuracy. Check `cv_results_` for both metrics across all trials.
+    **Weighted Accuracy:** `{search_multi.cv_results_['mean_test_weighted_accuracy'][search_multi.best_index_]:.3f}`
+    **Unweighted Accuracy:** `{search_multi.cv_results_['mean_test_unweighted_accuracy'][search_multi.best_index_]:.3f}`
     """)
     return
 
@@ -239,10 +229,10 @@ def _(mo, search_multi):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 4. Metadata Routing in Pipelines
+    ## 4. Route Metadata in a Pipeline
 
-    When using pipelines, different steps can have different metadata requirements.
-    Here, the scaler doesn't need sample weights, but the classifier does.
+    Configure each pipeline step independently: the scaler ignores
+    weights while the classifier uses them.
     """)
     return
 
@@ -272,6 +262,7 @@ def _(
             ("scaler", scaler),
             ("classifier", lr_pipe),
         ])
+        pipe.set_score_request(sample_weight=True)  # Route weights to pipeline scoring
 
         search_pipe = OptunaSearchCV(
             pipe,
@@ -294,27 +285,6 @@ def _(mo, search_pipe):
     **Best Score:** `{search_pipe.best_score_:.3f}`
 
     The sample weights were correctly routed only to the classifier, not the scaler.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Key Takeaways
-
-    - **Enable routing** -- Use `sklearn.config_context(enable_metadata_routing=True)` to activate metadata routing
-    - **Request configuration** -- Use `.set_fit_request(sample_weight=True)` and `.set_score_request(sample_weight=True)` on estimators
-    - **Pass as kwargs** -- Pass metadata as keyword arguments to `fit()`: `search.fit(X, y, sample_weight=weights)`
-    - **Mixed routing** -- Different scorers can have different routing preferences in multi-metric scenarios
-    - **Pipeline support** -- Each pipeline step can independently configure its metadata requirements
-    - **Imbalanced data** -- Sample weights are essential for handling imbalanced datasets properly
-
-    ## Next Steps
-
-    - **Group cross-validation**: Explore routing `groups` for GroupKFold cross-validation
-    - **Custom metadata**: Try custom metadata for domain-specific information
-    - **Callbacks**: Combine metadata routing with callbacks for advanced workflows (see callbacks.py)
     """)
     return
 
