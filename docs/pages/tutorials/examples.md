@@ -1,6 +1,6 @@
 # Examples
 
-Explore real-world applications of Sklearn-Optuna through interactive examples.
+Interactive notebooks grouped by purpose: **Tutorials** walk through a topic step-by-step, while **How-to Guides** solve a specific task.
 Each notebook is available in two formats: **View** for static reading, and **Open in marimo** for an interactive notebook that runs in the marimo playground.
 
 <!-- GALLERY -->
@@ -20,5 +20,5 @@ uv run marimo edit examples/quickstart.py
 
 ## Next Steps
 
-- Browse the [API Reference](api-reference.md) for detailed documentation
-- Check the [User Guide](user-guide.md) to understand core concepts
+- Browse the [API Reference](../reference/api.md) for detailed documentation
+- Read [Concepts and Architecture](../explanation/concepts.md) to understand the design
