@@ -3,7 +3,7 @@
 
 # Welcome to Sklearn-Optuna's documentation
 
-`OptunaSearchCV` is a drop-in replacement for Scikit-Learn's `GridSearchCV` and `RandomizedSearchCV` powered by [Optuna](https://optuna.org/). It extends `BaseSearchCV`, so `fit()`, `score()`, `best_params_`, `cv_results_`, pipelines, and `clone()` all work out of the box. Optuna samplers (TPE, CMA-ES, …) explore search spaces more efficiently than grid or random search, while Optuna distributions give you log-scaled, bounded, and categorical parameter spaces.
+`OptunaSearchCV` is a drop-in replacement for Scikit-Learn's `GridSearchCV` and `RandomizedSearchCV` powered by [Optuna](https://optuna.org/). It extends `BaseSearchCV`, so `fit()`, `score()`, `best_params_`, `cv_results_`, pipelines, and `clone()` all work out of the box. Optuna samplers (TPE, CMA-ES, ...) explore search spaces more efficiently than grid or random search, while Optuna distributions give you log-scaled, bounded, and categorical parameter spaces.
 
 !!! note "Inspiration"
     This project is inspired by [optuna-integration's OptunaSearchCV](https://optuna-integration.readthedocs.io/en/latest/reference/generated/optuna_integration.OptunaSearchCV.html).
@@ -14,70 +14,73 @@
 
     ---
 
-    Install Sklearn-Optuna and run your first hyperparameter search
+    Install Sklearn-Optuna and run your first hyperparameter search.
 
-    Install → Define distributions → Fit → Done
+    [Getting Started](pages/tutorials/getting-started.md)
 
-    [Getting Started](pages/getting-started.md)
-
-- **Learn the Concepts**
+- **How-to Guides**
 
     ---
 
-    Understand OptunaSearchCV, samplers, distributions, and callbacks
+    Task-oriented guides for samplers, callbacks, persistence, pipelines, and more.
 
-    [User Guide](pages/user-guide.md)
+    [How-to Guides](pages/how-to/configure-samplers.md)
 
 - **See It In Action**
 
     ---
 
-    Explore 7 interactive notebooks from quickstart to pipelines
+    Explore interactive notebooks from quickstart to pipelines.
 
-    [Examples](pages/examples.md)
+    [Examples](pages/tutorials/examples.md)
 
 - **API Reference**
 
     ---
 
-    Complete API documentation for OptunaSearchCV and wrapper classes
+    Complete API documentation for OptunaSearchCV and wrapper classes.
 
-    [API Reference](pages/api-reference.md)
+    [API Reference](pages/reference/api.md)
 
 
 </div>
 
 ## Table of Contents
 
-### [Getting started](pages/getting-started.md)
+### [Getting Started](pages/tutorials/getting-started.md)
 
-Step-by-step guide to installing and setting up Sklearn-Optuna in your project.
+Step-by-step tutorial to installing and running your first hyperparameter search.
 
-- [1. Install the package](pages/getting-started.md#step-1-install-the-package)
-- [2. Verify installation](pages/getting-started.md#step-2-verify-installation)
-- [3. Basic usage](pages/getting-started.md#basic-usage)
+- [Installation](pages/tutorials/getting-started.md#installation)
+- [Your First Search](pages/tutorials/getting-started.md#your-first-hyperparameter-search)
 
+### [How-to Guides](pages/how-to/configure-samplers.md)
 
-### [Examples](pages/examples.md)
+Task-oriented guides for common workflows.
+
+- [Configure Samplers](pages/how-to/configure-samplers.md)
+- [Use Callbacks](pages/how-to/use-callbacks.md)
+- [Persist and Resume Studies](pages/how-to/persist-studies.md)
+- [Score Multiple Metrics](pages/how-to/score-multiple-metrics.md)
+- [Use in Pipelines](pages/how-to/use-in-pipelines.md)
+- [Handle Errors](pages/how-to/handle-errors.md)
+- [Troubleshooting](pages/how-to/troubleshooting.md)
+
+### [Examples](pages/tutorials/examples.md)
 
 Interactive notebooks demonstrating real-world use cases.
 
-- [Gallery](pages/examples.md#examples)
-- [Running examples locally](pages/examples.md#running-examples-locally)
-
-
-### [User guide](pages/user-guide.md)
-
-In-depth documentation on the design, architecture, and core concepts.
-
-- [Core Concepts](pages/user-guide.md#core-concepts)
-- [Configuration](pages/user-guide.md#configuration)
-- [Best Practices](pages/user-guide.md#best-practices)
-
-### [Reference](pages/api-reference/)
+### [Reference](pages/reference/api.md)
 
 Detailed reference for the Sklearn-Optuna API, including classes, functions, and configuration options.
 
+- [API Reference](pages/reference/api.md)
+- [Configuration](pages/reference/configuration.md)
+
+### [Concepts and Architecture](pages/explanation/concepts.md)
+
+Understanding how OptunaSearchCV works and what trade-offs were made.
+
 ## License
 
-Sklearn-Optuna is open source and licensed under the [Apache-2.0 License](https://opensource.org/licenses/Apache-2.0). You are free to use, modify, and distribute this software under the terms of this license.
+Sklearn-Optuna is open source and licensed under the [Apache-2.0 License](https://opensource.org/licenses/Apache-2.0).

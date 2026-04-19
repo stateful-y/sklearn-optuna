@@ -1,6 +1,6 @@
-"""Study Management.
+"""How to Resume Optimization from Prior Trials.
 
-Learn how to reuse studies and manage optimization history.
+Reuse an Optuna study to continue optimization runs.
 """
 
 # /// script
@@ -17,8 +17,10 @@ __generated_with = "0.19.9"
 app = marimo.App(width="medium")
 
 __gallery__ = {
-    "title": "Study Management and Reproducibility",
+    "title": "How to Resume Optimization from Prior Trials",
     "description": "Reuse an Optuna study to continue optimization runs and keep experiments reproducible.",
+    "category": "how-to",
+    "companion": "pages/how-to/persist-studies.md",
 }
 
 
@@ -50,17 +52,15 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    # Study Management
+    # How to Resume Optimization from Prior Trials
 
-    ## What You'll Learn
+    This notebook shows how to create an Optuna study manually
+    and pass it to `OptunaSearchCV` to accumulate trials across
+    runs.
 
-    - How to create an Optuna study manually and pass it to `OptunaSearchCV`
-    - How to resume optimization from prior trials without starting from scratch
-    - How to maintain reproducible experiment histories across runs
-
-    ## Prerequisites
-
-    Familiarity with the OptunaSearchCV quickstart (see quickstart.py).
+    **Prerequisites:** Familiarity with the
+    OptunaSearchCV quickstart
+    ([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)).
     """)
     return
 
@@ -75,11 +75,10 @@ def _(make_classification):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 1. Create a Study First
+    ## 1. Create a Study
 
-    Create an Optuna study explicitly before running `OptunaSearchCV`. By creating the study
-    upfront, you can control its name, direction, and sampler. This study object can then be
-    passed to multiple search operations, accumulating trials across runs.
+    Create an Optuna study explicitly to control its name, direction,
+    and sampler.
     """)
     return
 
@@ -94,12 +93,11 @@ def _(optuna):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 2. Pass Study to fit()
+    ## 2. Pass the Study to fit()
 
-    Pass the existing study to `OptunaSearchCV.fit()` using the `study=` parameter. This
-    appends new trials to the study instead of creating a new one. The search will suggest
-    parameters based on all historical trials, making the optimization more efficient by
-    learning from previous runs.
+    Pass the existing study to `OptunaSearchCV.fit()` via the
+    `study=` parameter. New trials are appended to the study
+    instead of creating a new one.
     """)
     return
 
@@ -120,23 +118,13 @@ def _(FloatDistribution, LogisticRegression, OptunaSearchCV, X, study, y):
 @app.cell(hide_code=True)
 def _(mo, search):
     mo.md(f"""
-    Study name: {search.study_.study_name}
-    """)
-    return
+    **Study name:** {search.study_.study_name}
 
+    **Total trials:** {len(search.study_.trials)}
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Key Takeaways
+    **Best trial number:** {search.study_.best_trial.number}
 
-    - **Study reuse** -- Create an Optuna Study manually and pass it to `fit(study=...)` to accumulate trials
-    - **Resume optimization** -- Pausing and resuming searches or sharing studies across runs avoids redundant computation
-
-    ## Next Steps
-
-    - **Visualizations**: See visualization.py to plot optimization history and parameter importance
-    - **Callbacks**: See callbacks.py to add custom stopping criteria to your searches
+    **Best score:** {search.study_.best_value:.3f}
     """)
     return
 

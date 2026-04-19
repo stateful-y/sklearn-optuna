@@ -78,7 +78,6 @@ examples/__marimo__/
 .ruff_cache/
 
 # build
-uv.lock
 src/sklearn_optuna/_version.py
 
 # Documentation examples
@@ -86,6 +85,9 @@ docs/examples/*/
 
 # Auto-generated API submodule pages (created by docs/hooks.py)
 docs/pages/api/
+
+# Worktrees
+.worktrees/
 
 # AI Assistant Instructions
 CLAUDE.md
