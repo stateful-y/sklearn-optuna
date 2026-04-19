@@ -17,8 +17,8 @@ build:
       # Create the virtual environment using uv
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
-      # Sync doc-dependencies (the group "docs") and install the project itself
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --group docs
+      # Sync doc-dependencies (the group "docs") using the committed lockfile
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --group docs
     post_build:
       # Check for broken links
       - uvx linkchecker "${READTHEDOCS_OUTPUT}html/index.html" --no-status --no-warnings --ignore-url material/overrides
