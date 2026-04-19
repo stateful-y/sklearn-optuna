@@ -445,44 +445,29 @@ Create a new marimo notebook in `examples/<name>.py`:
 
 #### Required Structure
 
-Notebooks serve **tutorials** or **how-to guides** only - never explanation or reference. The structure depends on the quadrant:
+Every example notebook **must** follow this structure in order:
 
-**Tutorial notebooks** (category: `tutorial`):
+1. **Title**: A top-level `# Title` heading describing the notebook topic
+2. **What You'll Learn**: A `## What You'll Learn` section with a bulleted list of concrete learning goals
+3. **Prerequisites**: A `## Prerequisites` section stating required prior knowledge (one-liner or short bullet list). For standalone dataset explorations, use "None: this is a standalone dataset exploration."
+4. **Numbered sections**: Main content as `## 1. Section Name`, `## 2. Section Name`, etc.
+5. **Key Takeaways**: A `## Key Takeaways` section with bullet points summarizing important lessons learned
+6. **Next Steps**: A `## Next Steps` section with bullet points linking to related notebooks or documentation
 
-1. **Title**: `# In this notebook, we will [goal]`
-2. **Prerequisites**: One-liner stating required prior knowledge
-3. **Numbered sections**: `## 1. Section Name`, `## 2. Section Name`, etc. with visible output every cell
-4. **What We Built**: Closing section summarizing what was accomplished and linking to next steps
-
-**How-to notebooks** (category: `how-to`):
-
-1. **Title**: `# How to [Verb] [Object]`
-2. **Prerequisites**: One-liner stating required prior knowledge
-3. **Numbered sections**: `## 1. Section Name`, `## 2. Section Name`, etc. with action-only prose
-4. No closing summary - the notebook ends after the last step
-
-**Example intro cell (tutorial)**:
+**Example intro cell**:
 
 ```markdown
-# Your First Hyperparameter Search
+# Reduction Forecasting with sklearn
 
-In this notebook, we will run a hyperparameter search using OptunaSearchCV
-and inspect the results.
+## What You'll Learn
 
-**Prerequisites:** Python 3.11+ and familiarity with sklearn's fit/predict API.
-```
+- How `PointReductionForecaster` tabularizes time series data using lag features
+- The difference between `target_transformer` and `feature_transformer` parameters
+- Tuning hyperparameters with `GridSearchCV`
 
-**Example intro cell (how-to)**:
+## Prerequisites
 
-```markdown
-# How to Stop Optimization Early with Callbacks
-
-This notebook shows how to attach Optuna callbacks to OptunaSearchCV
-to stop a search after a fixed number of trials.
-
-**Prerequisites:** Familiarity with the
-OptunaSearchCV quickstart
-([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)).
+Basic familiarity with sklearn's fit/predict API and time series concepts (trend, seasonality).
 ```
 
 #### Marimo Cell Conventions
@@ -509,11 +494,12 @@ OptunaSearchCV quickstart
 
 #### Content Guidelines
 
-- **Gallery metadata**: Every example notebook should include a `__gallery__` variable defining `title`, `description`, and `category` (`"tutorial"` or `"how-to"`) for the example gallery. Add a `companion` key pointing to the matching doc page path when one exists.
-- **Markdown density**: Each numbered section should open with a short markdown cell (one to two sentences) before any code cells. Tutorial sections may be slightly longer; how-to sections should be action-only.
+- **Gallery metadata**: Every example notebook should include a `__gallery__` variable in the first `@app.cell` defining `title`, `description`, and `category` for the example gallery.
+- **Markdown density**: Each numbered section should open with a descriptive markdown cell explaining the concept before any code cells. Consecutive code cells within the same section are acceptable when logically grouped.
 - **No emojis**: Do not use emojis anywhere in notebooks whether it is in headings, content bullets, or concluding remarks.
-- **API cross-links**: When mentioning sklearn_optuna classes or functions in markdown cells, wrap them in backtick-link syntax pointing to the API page.
-- **Voice**: Tutorials use "we" (first-person plural). How-to guides use imperative or conditional imperatives ("If you need X, pass Y").
+- **API cross-links**: When mentioning sklearn_optuna classes or functions in markdown cells, wrap them in backtick-link syntax pointing to the API page (e.g., `` [`SeasonalNaive`](/pages/api/generated/sklearn_optuna.point.naive.SeasonalNaive/) ``).
+- **Key Takeaways format**: Use bold for key terms with plain descriptions (e.g., `- **Reduction forecasting** converts time series into tabular regression via lag features`)
+- **Next Steps format**: Use bold labels with linked notebook references (e.g., `- **Naive baselines**: See [`naive_forecasters.py`](/examples/point/naive_forecasters/) to compare`). Always link to the rendered example page, not the raw file.
 
 #### Testing and Documentation
 

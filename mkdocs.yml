@@ -143,6 +143,7 @@ nav:
     - Getting Started: pages/tutorials/getting-started.md
     - Examples: pages/tutorials/examples.md
   - How-to Guides:
+    - pages/how-to/index.md
     - Configure Samplers: pages/how-to/configure-samplers.md
     - Use Callbacks: pages/how-to/use-callbacks.md
     - Persist and Resume Studies: pages/how-to/persist-studies.md

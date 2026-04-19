@@ -11,13 +11,13 @@ weights or group labels.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
-- scikit-learn's metadata routing enabled
+- Scikit-Learn's metadata routing enabled
 
 ## Enable Metadata Routing
 
-Activate scikit-learn's metadata routing before creating your search:
+Activate Scikit-Learn's metadata routing before creating your search:
 
 ```python
 import sklearn
@@ -94,7 +94,7 @@ Use the `step__param` syntax to target metadata at a specific pipeline step.
 
 ## See Also
 
-- [Score Multiple Metrics](score-multiple-metrics.md) - use multiple scorers with metadata routing
-- [Use in Pipelines](use-in-pipelines.md) - general pipeline integration
-- [API Reference](../reference/api.md) - full parameter documentation
-- [Concepts and Architecture](../explanation/concepts.md) - how OptunaSearchCV integrates with scikit-learn
+- [Score Multiple Metrics](score-multiple-metrics.md): use multiple scorers with metadata routing
+- [Use in Pipelines](use-in-pipelines.md): general pipeline integration
+- [API Reference](../reference/api.md): full parameter documentation
+- [Concepts and Architecture](../explanation/concepts.md): how OptunaSearchCV integrates with Scikit-Learn

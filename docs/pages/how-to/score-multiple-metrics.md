@@ -6,7 +6,7 @@ accuracy alongside F1 score, precision, or any other metric.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
 !!! tip "Interactive version available"
@@ -63,7 +63,7 @@ print(results[["mean_test_precision", "mean_test_recall"]].head())
 ## Combine with Metadata Routing
 
 If your scorer requires additional metadata (such as `sample_weight`), use
-scikit-learn's metadata routing:
+Scikit-Learn's metadata routing:
 
 ```python
 from sklearn.metrics import make_scorer, f1_score
@@ -80,6 +80,6 @@ search.fit(X, y, sample_weight=weights)
 
 ## See Also
 
-- [API Reference](../reference/api.md) - full parameter documentation
-- Metadata Routing example notebook: [View](/examples/metadata_routing/) · [Open in marimo](/examples/metadata_routing/edit/) - advanced scoring with sample weights
-- [Configuration Reference](../reference/configuration.md) - all `scoring` and `refit` options
+- [API Reference](../reference/api.md): full parameter documentation
+- Metadata Routing example notebook: [View](/examples/metadata_routing/) · [Open in marimo](/examples/metadata_routing/edit/), for advanced scoring with sample weights
+- [Configuration Reference](../reference/configuration.md): all `scoring` and `refit` options

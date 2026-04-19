@@ -2,16 +2,16 @@
 
 !!! tip "Interactive notebook"
     See the companion notebook for a runnable example.
-    [View](/examples/pipelines/) · [Open in marimo](/examples/pipelines/edit/)
+    [View](/examples/nested_pipeline/) · [Open in marimo](/examples/nested_pipeline/edit/)
 
-This guide shows you how to use `OptunaSearchCV` with scikit-learn pipelines.
+This guide shows you how to use `OptunaSearchCV` with Scikit-Learn pipelines.
 Use this when you need to tune hyperparameters of estimators inside a pipeline,
 or nest `OptunaSearchCV` as a pipeline step.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
-- Familiarity with scikit-learn's `Pipeline`
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Familiarity with Scikit-Learn's `Pipeline`
 
 ## Tune Pipeline Sub-Estimator Parameters
 
@@ -44,7 +44,7 @@ The search tunes `C` on the `LogisticRegression` step while applying
 
 ## Nest OptunaSearchCV Inside a Pipeline
 
-`OptunaSearchCV` is a valid scikit-learn estimator, so you can use it as a
+`OptunaSearchCV` is a valid Scikit-Learn estimator, so you can use it as a
 pipeline step:
 
 ```python
@@ -94,5 +94,5 @@ increase only after initial exploration.
 
 ## See Also
 
-- [API Reference](../reference/api.md) - full parameter documentation
-- [Concepts and Architecture](../explanation/concepts.md) - how OptunaSearchCV integrates with scikit-learn
+- [API Reference](../reference/api.md): full parameter documentation
+- [Concepts and Architecture](../explanation/concepts.md): how OptunaSearchCV integrates with Scikit-Learn

@@ -11,7 +11,7 @@ Solutions to common problems when using Sklearn-Optuna.
 : Make sure you installed in the active environment: `python -c "import sklearn_optuna"`.
 
 **Problem: Optuna version conflict**
-: Sklearn-optuna requires Optuna 3.5-3.x. If you have Optuna 4.x installed, downgrade with `pip install "optuna>=3.5,<4"`.
+: Sklearn-Optuna requires Optuna 3.5-3.x. If you have Optuna 4.x installed, downgrade with `pip install "optuna>=3.5,<4"`.
 
 ## Search Issues
 
@@ -33,7 +33,7 @@ Solutions to common problems when using Sklearn-Optuna.
 : Use double-underscore syntax to address nested parameters: `"clf__C"` for the `C` parameter of the `clf` step. See [How to Use in Pipelines](use-in-pipelines.md).
 
 **Problem: OptunaSearchCV does not work as a pipeline step**
-: `OptunaSearchCV` is a valid scikit-learn estimator and works as a pipeline step. Make sure you pass it as a step tuple: `("search", search)`.
+: `OptunaSearchCV` is a valid Scikit-Learn estimator and works as a pipeline step. Make sure you pass it as a step tuple: `("search", search)`.
 
 ## Storage Issues
 

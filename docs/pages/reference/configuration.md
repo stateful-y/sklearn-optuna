@@ -6,7 +6,7 @@ All parameters accepted by `OptunaSearchCV`.
 
 | Parameter | Type | Default | Description |
 |:----------|:-----|:--------|:------------|
-| `estimator` | estimator | *required* | The scikit-learn estimator to tune |
+| `estimator` | estimator | *required* | The Scikit-Learn estimator to tune |
 | `param_distributions` | `dict[str, BaseDistribution]` | *required* | Mapping of parameter names to Optuna distributions |
 | `n_trials` | `int` | `10` | Number of Optuna trials to run |
 | `timeout` | `float \| None` | `None` | Maximum seconds for the study. `None` means no limit |
@@ -35,12 +35,12 @@ All parameters accepted by `OptunaSearchCV`.
 | `best_score_` | `float` | Mean cross-validated score of the best trial |
 | `best_index_` | `int` | Index of the best trial in `cv_results_` |
 | `best_estimator_` | estimator | Estimator refitted on full data (when `refit=True`) |
-| `cv_results_` | `dict` | Dictionary with per-trial results in scikit-learn format |
+| `cv_results_` | `dict` | Dictionary with per-trial results in Scikit-Learn format |
 | `study_` | `optuna.Study` | The Optuna study object |
 | `trials_` | `list[FrozenTrial]` | List of all completed trials |
 
 ## See Also
 
-- [API Reference](api.md) - full API documentation with docstrings
-- [Concepts and Architecture](../explanation/concepts.md) - how these parameters interact
-- [Getting Started](../tutorials/getting-started.md) - basic usage tutorial
+- [API Reference](api.md): full API documentation with docstrings
+- [Concepts and Architecture](../explanation/concepts.md): how these parameters interact
+- [Getting Started](../tutorials/getting-started.md): basic usage tutorial

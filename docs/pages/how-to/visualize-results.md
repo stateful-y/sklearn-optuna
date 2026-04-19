@@ -10,7 +10,7 @@ to inspect convergence behavior or identify important parameter regions.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A completed `OptunaSearchCV` search
 - Plotly installed (`uv add plotly`)
 
@@ -65,5 +65,5 @@ fixed.
 
 ## See Also
 
-- [API Reference](../reference/api.md) - full parameter documentation
-- [Concepts and Architecture](../explanation/concepts.md) - how OptunaSearchCV integrates with scikit-learn
+- [API Reference](../reference/api.md): full parameter documentation
+- [Concepts and Architecture](../explanation/concepts.md): how OptunaSearchCV integrates with Scikit-Learn

@@ -10,7 +10,7 @@ you want to build on previous results.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
 ## Save Trials to a Database
@@ -62,5 +62,5 @@ search = OptunaSearchCV(
 
 ## See Also
 
-- [API Reference](../reference/api.md) - full wrapper API
-- [Concepts and Architecture](../explanation/concepts.md) - how wrappers work
+- [API Reference](../reference/api.md): full wrapper API
+- [Concepts and Architecture](../explanation/concepts.md): how wrappers work

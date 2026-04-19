@@ -5,7 +5,7 @@
     [View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)
 
 In this tutorial, we will run an Optuna-powered hyperparameter search using
-scikit-learn's familiar `fit()` / `best_params_` API. Along the way, we will
+Scikit-Learn's familiar `fit()` / `best_params_` API. Along the way, we will
 install the package, define an Optuna search space, create an `OptunaSearchCV`
 instance, and inspect the results.
 
@@ -51,7 +51,7 @@ strength for a logistic regression model.
 
 ### Prepare the data
 
-We will use scikit-learn's `make_classification` to generate a small synthetic
+We will use Scikit-Learn's `make_classification` to generate a small synthetic
 dataset:
 
 ```python
@@ -127,15 +127,15 @@ predictions = search.best_estimator_.predict(X[:5])
 print(predictions)
 ```
 
-Notice that `best_estimator_` is a regular scikit-learn estimator. Everything
+Notice that `best_estimator_` is a regular Scikit-Learn estimator. Everything
 you normally do with a fitted model (predict, score, serialize) works here too.
 
 ## What We Built
 
-We ran an Optuna-powered hyperparameter search through scikit-learn's standard
+We ran an Optuna-powered hyperparameter search through Scikit-Learn's standard
 API. Along the way, we:
 
-- Installed sklearn-optuna and verified it
+- Installed Sklearn-Optuna and verified it
 - Defined an Optuna search space with `FloatDistribution`
 - Created an `OptunaSearchCV` instance with a reproducible sampler
 - Inspected `best_params_`, `best_score_`, and `best_estimator_`
@@ -164,8 +164,8 @@ Or run locally:
 
 ## Next Steps
 
-- [How to Configure Samplers](../how-to/configure-samplers.md) - choose the right optimization algorithm
-- [How to Use Callbacks](../how-to/use-callbacks.md) - control when optimization stops
-- [How to Use in Pipelines](../how-to/use-in-pipelines.md) - tune hyperparameters inside scikit-learn pipelines
-- [Concepts and Architecture](../explanation/concepts.md) - understand how OptunaSearchCV works under the hood
-- [Examples](examples.md) - interactive notebooks with more advanced use cases
+- [How to Configure Samplers](../how-to/configure-samplers.md): choose the right optimization algorithm
+- [How to Use Callbacks](../how-to/use-callbacks.md): control when optimization stops
+- [How to Use in Pipelines](../how-to/use-in-pipelines.md): tune hyperparameters inside Scikit-Learn pipelines
+- [Concepts and Architecture](../explanation/concepts.md): understand how OptunaSearchCV works under the hood
+- [Examples](examples.md): interactive notebooks with more advanced use cases

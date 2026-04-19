@@ -1,12 +1,12 @@
 # Concepts and Architecture
 
-Sklearn-optuna bridges two ecosystems: scikit-learn's estimator API and
+Sklearn-Optuna bridges two ecosystems: Scikit-Learn's estimator API and
 Optuna's hyperparameter optimization framework. This page explains how the
 integration works and what trade-offs were made.
 
 ## The Two Ecosystems
 
-Scikit-learn organizes machine learning around **estimators** - objects with a
+Scikit-Learn organizes machine learning around **estimators**: objects with a
 `fit()` / `predict()` interface, parameter introspection via `get_params()` /
 `set_params()`, and deep cloning via `clone()`. Hyperparameter search is built
 on `BaseSearchCV`, which adds cross-validation, result aggregation, and refitting
@@ -22,37 +22,37 @@ objects are constructed, cloned, and parameterized.
 
 ## How OptunaSearchCV Works
 
-`OptunaSearchCV` extends scikit-learn's `BaseSearchCV`. When you call `fit()`:
+`OptunaSearchCV` extends Scikit-Learn's `BaseSearchCV`. When you call `fit()`:
 
-1. **Study creation** - An Optuna study is created (or resumed if you pass an
+1. **Study creation**: An Optuna study is created (or resumed if you pass an
    existing study). The sampler, storage, and study name are configured from
    the wrapper objects you provided at construction time.
 
-2. **Trial loop** - The study's `optimize()` method calls an internal
+2. **Trial loop**: The study's `optimize()` method calls an internal
    `_Objective` instance for each trial. The objective asks Optuna to suggest
    parameter values from the distributions you provided, clones the estimator
    with those values, and runs `cross_validate()`.
 
-3. **Score storage** - Per-fold scores are stored as trial user attributes
+3. **Score storage**: Per-fold scores are stored as trial user attributes
    (`mean_test_score`, `split0_test_score`, etc.), making them available
-   through both Optuna's trial API and scikit-learn's `cv_results_` dict.
+   through both Optuna's trial API and Scikit-Learn's `cv_results_` dict.
 
-4. **Result assembly** - After optimization completes, `_build_cv_results()`
-   transforms the list of `FrozenTrial` objects into scikit-learn's standard
+4. **Result assembly**: After optimization completes, `_build_cv_results()`
+   transforms the list of `FrozenTrial` objects into Scikit-Learn's standard
    `cv_results_` format. `best_params_`, `best_score_`, and `best_index_` are
    set from the best trial.
 
-5. **Refit** - If `refit=True` (the default), the best estimator is trained on
+5. **Refit**: If `refit=True` (the default), the best estimator is trained on
    the full dataset and stored as `best_estimator_`.
 
 Because `OptunaSearchCV` inherits from `BaseSearchCV`, everything that works
-with scikit-learn's search API works here too: pipelines, `clone()`, metadata
+with Scikit-Learn's search API works here too: pipelines, `clone()`, metadata
 routing, and serialization.
 
 ## Wrapper Classes
 
 Optuna's samplers, storage backends, and callbacks are plain Python objects.
-They do not implement `get_params()` or `set_params()`, which means scikit-learn
+They do not implement `get_params()` or `set_params()`, which means Scikit-Learn
 cannot clone them, serialize them, or route parameters through them.
 
 The `Sampler`, `Storage`, and `Callback` wrappers solve this by storing the
@@ -65,7 +65,7 @@ import optuna
 # This stores: class=TPESampler, kwargs={seed: 42}
 sampler = Sampler(sampler=optuna.samplers.TPESampler, seed=42)
 
-# scikit-learn can now introspect and clone it
+# Scikit-Learn can now introspect and clone it
 sampler.get_params()
 # {'sampler': <class 'optuna.samplers.TPESampler'>, 'seed': 42}
 ```
@@ -80,11 +80,11 @@ and can even be treated as tunable hyperparameters themselves.
 ## Parameter Distributions
 
 Search spaces are defined with Optuna distribution objects rather than
-scikit-learn-style lists or ranges:
+Scikit-Learn-style lists or ranges:
 
-- `FloatDistribution(low, high, log=False, step=None)` - continuous float range
-- `IntDistribution(low, high, log=False, step=1)` - integer range
-- `CategoricalDistribution(choices)` - discrete set of values
+- `FloatDistribution(low, high, log=False, step=None)`: continuous float range
+- `IntDistribution(low, high, log=False, step=1)`: integer range
+- `CategoricalDistribution(choices)`: discrete set of values
 
 Using `log=True` for parameters like regularization strength (`C`, `alpha`) or
 learning rates is important because these parameters typically span several
@@ -110,15 +110,15 @@ level, not the fold level.
 
 ## Limitations
 
-- **No pruning** - Optuna's pruning API (early stopping of unpromising trials)
+- **No pruning**: Optuna's pruning API (early stopping of unpromising trials)
   is not wired into `OptunaSearchCV`. All trials run full cross-validation.
 
-- **Single-objective only** - `OptunaSearchCV` creates a single-objective study
+- **Single-objective only**: `OptunaSearchCV` creates a single-objective study
   (`direction="maximize"`). Multi-objective Pareto optimization requires using
   Optuna directly.
 
-- **Threading-based parallelism** - Parallel trials use threading, not
-  multiprocessing. For most scikit-learn estimators that release the GIL during
+- **Threading-based parallelism**: Parallel trials use threading, not
+  multiprocessing. For most Scikit-Learn estimators that release the GIL during
   fitting, this works well. For pure-Python estimators, `n_jobs=1` may be
   faster.
 
@@ -126,7 +126,7 @@ level, not the fold level.
 
 ### Can I use OptunaSearchCV in a Pipeline?
 
-Yes. `OptunaSearchCV` is a valid scikit-learn estimator. You can use it as a
+Yes. `OptunaSearchCV` is a valid Scikit-Learn estimator. You can use it as a
 step in a `Pipeline` or wrap a `Pipeline` with it. See
 [How to Use in Pipelines](../how-to/use-in-pipelines.md).
 
@@ -151,6 +151,6 @@ This appends new trials to the existing study. See
 
 ## Further Reading
 
-- [Getting Started](../tutorials/getting-started.md) - hands-on tutorial
-- [Configuration Reference](../reference/configuration.md) - all OptunaSearchCV parameters
-- [API Reference](../reference/api.md) - full API documentation
+- [Getting Started](../tutorials/getting-started.md): hands-on tutorial
+- [Configuration Reference](../reference/configuration.md): all OptunaSearchCV parameters
+- [API Reference](../reference/api.md): full API documentation

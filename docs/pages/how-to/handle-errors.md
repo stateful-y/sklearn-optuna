@@ -7,7 +7,7 @@ not converge.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
 !!! tip "Interactive version available"
@@ -80,5 +80,5 @@ print(f"{len(failed)} trials failed out of {len(results)}")
 
 ## See Also
 
-- [API Reference](../reference/api.md) - `error_score` and `return_train_score` parameters
-- [Configuration Reference](../reference/configuration.md) - all parameter options
+- [API Reference](../reference/api.md): `error_score` and `return_train_score` parameters
+- [Configuration Reference](../reference/configuration.md): all parameter options

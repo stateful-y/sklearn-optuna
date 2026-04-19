@@ -6,7 +6,7 @@ algorithm or need reproducible results.
 
 ## Prerequisites
 
-- sklearn-optuna installed ([Getting Started](../tutorials/getting-started.md))
+- Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
 !!! tip "Interactive version available"
@@ -16,7 +16,7 @@ algorithm or need reproducible results.
 ## Choose a Sampler
 
 Wrap any Optuna sampler with the `Sampler` class to make it compatible with
-scikit-learn's `get_params()` / `set_params()` / `clone()` API:
+Scikit-Learn's `get_params()` / `set_params()` / `clone()` API:
 
 ```python
 from sklearn_optuna import OptunaSearchCV, Sampler
@@ -90,6 +90,6 @@ scores = cross_val_score(search, X, y, cv=5)
 
 ## See Also
 
-- [API Reference](../reference/api.md) - full wrapper API
-- [Concepts and Architecture](../explanation/concepts.md) - how wrappers work
-- [Optuna Samplers documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/index.html) - all available samplers
+- [API Reference](../reference/api.md): full wrapper API
+- [Concepts and Architecture](../explanation/concepts.md): how wrappers work
+- [Optuna Samplers documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/index.html): all available samplers

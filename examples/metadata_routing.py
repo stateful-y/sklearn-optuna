@@ -6,6 +6,7 @@ Pass sample_weight through OptunaSearchCV to model fitting and scoring.
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
+#     "numpy",
 #     "optuna",
 #     "scikit-learn",
 #     "sklearn-optuna",
@@ -33,10 +34,12 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
+    import numpy as np
     import sklearn
     from optuna.distributions import FloatDistribution
     from sklearn.datasets import make_classification
     from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score, make_scorer
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
     from sklearn.utils.class_weight import compute_sample_weight
@@ -49,8 +52,10 @@ def _():
         OptunaSearchCV,
         Pipeline,
         StandardScaler,
+        accuracy_score,
         compute_sample_weight,
         make_classification,
+        make_scorer,
         sklearn,
     )
 
@@ -157,7 +162,74 @@ def _(mo, search):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## 3. Route Metadata in a Pipeline
+    ## 3. Multi-Metric Scoring with Mixed Routing
+
+    Create scorers with different routing preferences: one weighted,
+    one unweighted.
+    """)
+    return
+
+
+@app.cell
+def _(
+    FloatDistribution,
+    LogisticRegression,
+    OptunaSearchCV,
+    X,
+    accuracy_score,
+    make_scorer,
+    sample_weight,
+    sklearn,
+    y,
+):
+    with sklearn.config_context(enable_metadata_routing=True):
+        # Configure estimator
+        lr_multi = LogisticRegression(max_iter=300, random_state=42)
+        lr_multi.set_fit_request(sample_weight=True)
+        lr_multi.set_score_request(sample_weight=True)
+
+        # Create scorers with different routing
+        weighted_scorer = make_scorer(accuracy_score)
+        weighted_scorer.set_score_request(sample_weight=True)
+
+        unweighted_scorer = make_scorer(accuracy_score)
+        unweighted_scorer.set_score_request(sample_weight=False)
+
+        scoring = {
+            "weighted_accuracy": weighted_scorer,
+            "unweighted_accuracy": unweighted_scorer,
+        }
+
+        search_multi = OptunaSearchCV(
+            lr_multi,
+            param_distributions={
+                "C": FloatDistribution(0.01, 10.0, log=True),
+            },
+            n_trials=10,
+            cv=3,
+            scoring=scoring,
+            refit="weighted_accuracy",  # Optimize for weighted metric
+        )
+
+        search_multi.fit(X, y, sample_weight=sample_weight)
+
+    return (search_multi,)
+
+
+@app.cell(hide_code=True)
+def _(mo, search_multi):
+    mo.md(f"""
+    **Best Parameters:** `C = {search_multi.best_params_['C']:.4f}`
+    **Weighted Accuracy:** `{search_multi.cv_results_['mean_test_weighted_accuracy'][search_multi.best_index_]:.3f}`
+    **Unweighted Accuracy:** `{search_multi.cv_results_['mean_test_unweighted_accuracy'][search_multi.best_index_]:.3f}`
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## 4. Route Metadata in a Pipeline
 
     Configure each pipeline step independently: the scaler ignores
     weights while the classifier uses them.
