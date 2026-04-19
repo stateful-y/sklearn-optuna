@@ -42,45 +42,14 @@
 
     [API Reference](pages/reference/api.md)
 
-
 </div>
-
-## Table of Contents
-
-### [Getting Started](pages/tutorials/getting-started.md)
-
-Step-by-step tutorial to installing and running your first hyperparameter search.
-
-- [Installation](pages/tutorials/getting-started.md#installation)
-- [Your First Search](pages/tutorials/getting-started.md#your-first-hyperparameter-search)
-
-### [How-to Guides](pages/how-to/configure-samplers.md)
-
-Task-oriented guides for common workflows.
-
-- [Configure Samplers](pages/how-to/configure-samplers.md)
-- [Use Callbacks](pages/how-to/use-callbacks.md)
-- [Persist and Resume Studies](pages/how-to/persist-studies.md)
-- [Score Multiple Metrics](pages/how-to/score-multiple-metrics.md)
-- [Use in Pipelines](pages/how-to/use-in-pipelines.md)
-- [Handle Errors](pages/how-to/handle-errors.md)
-- [Troubleshooting](pages/how-to/troubleshooting.md)
-
-### [Examples](pages/tutorials/examples.md)
-
-Interactive notebooks demonstrating real-world use cases.
-
-### [Reference](pages/reference/api.md)
-
-Detailed reference for the Sklearn-Optuna API, including classes, functions, and configuration options.
-
-- [API Reference](pages/reference/api.md)
-- [Configuration](pages/reference/configuration.md)
-
-### [Concepts and Architecture](pages/explanation/concepts.md)
-
-Understanding how OptunaSearchCV works and what trade-offs were made.
 
 ## License
 
-Sklearn-Optuna is open source and licensed under the [Apache-2.0 License](https://opensource.org/licenses/Apache-2.0).
+This project is licensed under the terms of the [Apache-2.0 License](https://github.com/stateful-y/sklearn-optuna/blob/main/LICENSE).
+
+## Acknowledgements
+
+This project is maintained by [stateful-y](https://stateful-y.io), an ML consultancy specializing in data science & engineering.
+
+![Made by stateful-y](assets/made_by_stateful-y.png){width=200}
