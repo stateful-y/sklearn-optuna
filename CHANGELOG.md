@@ -22,19 +22,6 @@ This **minor release** includes 2 commits.
 Thanks to all contributors for this release:
 - @gtauzin
 
-## [0.1.0-alpha.4] - 2026-04-19
-
-This **minor release** includes 1 commit.
-
-
-### Documentation
-- Update from copier template v0.18.0 and restructure docs per Diataxis  ([#21](https://github.com/stateful-y/sklearn-optuna/pull/21)) by @gtauzin
-
-### Contributors
-
-Thanks to all contributors for this release:
-- @gtauzin
-
 ## [0.1.0-alpha.3] - 2026-03-01
 
 This **minor release** includes 2 commits.
