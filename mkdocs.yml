@@ -71,7 +71,16 @@ markdown_extensions:
   - pymdownx.magiclink
   - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      # Ordered: docs-relative includes win, but a page can still reach the
+      # repo root (e.g. CHANGELOG.md).  Do not narrow this to [docs] -- a
+      # project may legitimately include a file from src/ or the repo root.
+      base_path:
+        - docs
+        - .
+      # Without this a missing include is dropped silently, rendering a page
+      # that looks deliberate and is empty.
+      check_paths: true
   - pymdownx.superfences:
       custom_fences:
         - class: mermaid
@@ -125,6 +134,11 @@ plugins:
       handlers:
         python:
           paths: [src]
+          inventories:
+            # Resolves standard-library types in signatures and See Also
+            # entries.  Add your dependencies' inventories here too, e.g.
+            #   - https://numpy.org/doc/stable/objects.inv
+            - https://docs.python.org/3/objects.inv
           options:
             docstring_style: numpy
             show_source: true
@@ -140,6 +154,7 @@ plugins:
 nav:
   - Home: index.md
   - Tutorials:
+    - pages/tutorials/index.md
     - Getting Started: pages/tutorials/getting-started.md
     - Examples: pages/tutorials/examples.md
   - How-to Guides:
@@ -155,9 +170,12 @@ nav:
     - Troubleshooting: pages/how-to/troubleshooting.md
     - Contributing: pages/how-to/contribute.md
   - Reference:
+    - pages/reference/index.md
     - API: pages/reference/api.md
     - Configuration: pages/reference/configuration.md
+    - Changelog: pages/reference/changelog.md
   - Explanation:
+    - pages/explanation/index.md
     - Concepts: pages/explanation/concepts.md
 
 extra:
@@ -168,4 +186,7 @@ extra:
 watch:
   - mkdocs.yml
   - docs
+  # The API pages are generated from the package source, so a source edit must
+  # trigger a rebuild -- otherwise adding a class shows nothing until restart.
+  - src
   - examples
