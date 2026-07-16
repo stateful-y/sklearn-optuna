@@ -10,6 +10,8 @@ not converge.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Control Behavior on Fit Failures
 
 By default, `OptunaSearchCV` records `NaN` for failing trials and continues

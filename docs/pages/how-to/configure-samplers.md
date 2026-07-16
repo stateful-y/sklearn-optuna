@@ -9,6 +9,8 @@ algorithm.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Choose a Sampler
 
 Wrap any Optuna sampler with the `Sampler` class to make it compatible with

@@ -9,6 +9,8 @@ accuracy alongside F1 score, precision, or any other metric.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Pass Multiple Scorers
 
 Provide a list of scorer names to `scoring` and set `refit` to the metric used

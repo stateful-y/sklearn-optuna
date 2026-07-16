@@ -11,6 +11,8 @@ weights or group labels.
 - A working `OptunaSearchCV` search
 - Scikit-Learn's metadata routing enabled
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Enable Metadata Routing
 
 Activate Scikit-Learn's metadata routing before creating your search:

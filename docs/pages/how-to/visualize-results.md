@@ -10,6 +10,8 @@ to inspect convergence behavior or identify important parameter regions.
 - A completed `OptunaSearchCV` search
 - Plotly installed (`uv add plotly`)
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Access the Study
 
 After calling `fit()`, the Optuna study is available as `search.study_`:

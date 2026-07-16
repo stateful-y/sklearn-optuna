@@ -9,6 +9,8 @@ you want to build on previous results.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Save Trials to a Database
 
 Wrap an Optuna storage backend with the `Storage` class and pass it to

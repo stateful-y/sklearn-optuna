@@ -14,6 +14,8 @@ instance, and inspect the results.
 - Python 3.11+ installed
 - A terminal or command prompt
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Installation
 
 Choose your preferred package manager:
@@ -142,7 +144,7 @@ API. Along the way, we:
 
 ## Try Interactive Examples
 
-For hands-on learning with interactive notebooks, see the [Examples](examples.md) page where you can:
+For hands-on learning with interactive notebooks, see the [Examples](../examples/index.md) page where you can:
 
 - Run code directly in your browser via WebAssembly
 - Experiment with different parameters
@@ -168,4 +170,4 @@ Or run locally:
 - [How to Use Callbacks](../how-to/use-callbacks.md): control when optimization stops
 - [How to Use in Pipelines](../how-to/use-in-pipelines.md): tune hyperparameters inside Scikit-Learn pipelines
 - [Concepts and Architecture](../explanation/concepts.md): understand how OptunaSearchCV works under the hood
-- [Examples](examples.md): interactive notebooks with more advanced use cases
+- [Examples](../examples/index.md): interactive notebooks with more advanced use cases

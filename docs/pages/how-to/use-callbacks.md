@@ -9,6 +9,8 @@ custom stopping criteria.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Add a Callback
 
 Wrap any Optuna callback with the `Callback` class and pass a dictionary of

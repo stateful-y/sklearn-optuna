@@ -9,6 +9,8 @@ or nest `OptunaSearchCV` as a pipeline step.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - Familiarity with Scikit-Learn's `Pipeline`
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Tune Pipeline Sub-Estimator Parameters
 
 Use `__` (double underscore) syntax to address parameters of estimators nested
