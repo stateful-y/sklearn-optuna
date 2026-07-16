@@ -1,9 +1,5 @@
 # How to Visualize Optimization Results
 
-!!! tip "Interactive notebook"
-    See the companion notebook for a runnable example.
-    [View](/examples/visualization/) · [Open in marimo](/examples/visualization/edit/)
-
 This guide shows you how to plot optimization history and parameter
 relationships from a completed `OptunaSearchCV` search. Use this when you need
 to inspect convergence behavior or identify important parameter regions.

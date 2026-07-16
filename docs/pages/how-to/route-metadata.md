@@ -1,9 +1,5 @@
 # How to Route Metadata
 
-!!! tip "Interactive notebook"
-    See the companion notebook for a runnable example.
-    [View](/examples/metadata_routing/) · [Open in marimo](/examples/metadata_routing/edit/)
-
 This guide shows you how to pass sample metadata (weights, groups, or custom
 properties) through `OptunaSearchCV` to the underlying estimator. Use this when
 your scoring or fitting logic depends on per-sample information like class
