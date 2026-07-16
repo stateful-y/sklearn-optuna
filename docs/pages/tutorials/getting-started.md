@@ -1,3 +1,7 @@
+---
+description: Install the package and run your first hyperparameter search with OptunaSearchCV.
+---
+
 # Getting Started
 
 !!! tip "Interactive notebook"
