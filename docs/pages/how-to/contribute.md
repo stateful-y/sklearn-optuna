@@ -236,21 +236,21 @@ This runs all notebooks in the `examples/` directory as Python scripts in parall
 Mark your tests appropriately to help maintain fast feedback during development:
 
 - Use `@pytest.mark.slow` for tests that:
-  - Take more than a few seconds to run
-  - Perform heavy computations
-  - Make network requests
-  - Access external resources
+    - Take more than a few seconds to run
+    - Perform heavy computations
+    - Make network requests
+    - Access external resources
 
 - Use `@pytest.mark.integration` for tests that:
-  - Run subprocess commands
-  - Test multiple components working together
-  - Require complex setup or teardown
-  - Exercise end-to-end workflows
+    - Run subprocess commands
+    - Test multiple components working together
+    - Require complex setup or teardown
+    - Exercise end-to-end workflows
 
 - `@pytest.mark.example` is used in `tests/test_examples.py` to:
-  - Validate example notebooks execute without errors
-  - Run notebooks in the `examples/` directory
-  - Test interactive documentation and tutorials
+    - Validate example notebooks execute without errors
+    - Run notebooks in the `examples/` directory
+    - Test interactive documentation and tutorials
 
 
 Example:
@@ -285,8 +285,8 @@ Follow these conventions when writing tests:
 The CI pipeline uses a two-tier testing strategy optimized for fast feedback:
 
 1. **Fast tests** (`test-fast` job): Runs on minimum and maximum Python versions (3.11, 3.14) only:
-   - **Draft PRs**: Ubuntu only - Quick feedback in ~2-3 minutes
-   - **Ready PRs/Main**: All OS - Ubuntu, Windows, macOS - Cross-platform validation
+    - **Draft PRs**: Ubuntu only - Quick feedback in ~2-3 minutes
+    - **Ready PRs/Main**: All OS - Ubuntu, Windows, macOS - Cross-platform validation
 
 2. **Full test suite** (`test-full` job): Runs all tests (fast + slow + integration) on Ubuntu across all Python versions (3.11-3.14) when the PR is not in draft mode or on the main branch. This comprehensive validation includes coverage reporting on the minimum supported Python version.
 
@@ -371,9 +371,49 @@ uvx interrogate src
 
 **`See Also` format:**
 
-Use standard numpydoc format with short backtick names. The `mkdocs-autorefs` plugin automatically links backtick references (e.g., `` `ClassName` ``) to the corresponding API pages in rendered documentation. This means plain backtick-wrapped names in docstrings become clickable links in the docs site without any special syntax.
+Use standard numpydoc format with short names:
+
+```python
+See Also
+--------
+OtherClass : One-line description of how it relates.
+other_function : Another related object.
+```
+
+Names are linked to their API pages automatically, whether or not you wrap them
+in backticks. Names that cannot be resolved (a private helper, or a concept
+rather than an API object) are left as plain text rather than failing the
+build, so you can reference anything that reads well.
+
+Fully qualified names work too (`sklearn_optuna.module.OtherClass`), and
+resolve to the same page as the short form. A member reference
+(`OtherClass.method`) links to that member on its class page. A name from
+another project (for example `sklearn.linear_model.Ridge`) links to that
+project's documentation when its inventory is configured in `mkdocs.yml`.
 
 For hyperlinks, always use Markdown syntax: `[text](url)`.
+
+### Glossary
+
+A glossary is optional. Create `docs/pages/explanation/glossary.md` and define
+terms as a definition list, giving each one an explicit anchor:
+
+```markdown
+Memory buffer { #memory-buffer .autolink }
+:   The internal store of recent rows a stateful component maintains.
+
+Step { #step }
+:   One timestep.
+```
+
+A term marked `.autolink` has its **first** occurrence on every other page
+turned into a link to its definition. The glossary page is the only place terms
+are listed, so a definition and its links cannot drift apart.
+
+Opting in is per term because defining a word and advertising it everywhere are
+different decisions. A glossary is free to define short, common words such as
+`step` above, and auto-linking those wherever prose happens to use them is
+noise. Text inside code, headings and existing links is never touched.
 
 ### Documentation
 
@@ -445,29 +485,43 @@ Create a new marimo notebook in `examples/<name>.py`:
 
 #### Required Structure
 
-Every example notebook **must** follow this structure in order:
+Notebooks serve **tutorials** or **how-to guides** only - never explanation or reference. The structure depends on the quadrant:
 
-1. **Title**: A top-level `# Title` heading describing the notebook topic
-2. **What You'll Learn**: A `## What You'll Learn` section with a bulleted list of concrete learning goals
-3. **Prerequisites**: A `## Prerequisites` section stating required prior knowledge (one-liner or short bullet list). For standalone dataset explorations, use "None: this is a standalone dataset exploration."
-4. **Numbered sections**: Main content as `## 1. Section Name`, `## 2. Section Name`, etc.
-5. **Key Takeaways**: A `## Key Takeaways` section with bullet points summarizing important lessons learned
-6. **Next Steps**: A `## Next Steps` section with bullet points linking to related notebooks or documentation
+**Tutorial notebooks** (category: `tutorial`):
 
-**Example intro cell**:
+1. **Title**: `# In this notebook, we will [goal]`
+2. **Prerequisites**: One-liner stating required prior knowledge
+3. **Numbered sections**: `## 1. Section Name`, `## 2. Section Name`, etc. with visible output every cell
+4. **What We Built**: Closing section summarizing what was accomplished and linking to next steps
+
+**How-to notebooks** (category: `how-to`):
+
+1. **Title**: `# How to [Verb] [Object]`
+2. **Prerequisites**: One-liner stating required prior knowledge
+3. **Numbered sections**: `## 1. Section Name`, `## 2. Section Name`, etc. with action-only prose
+4. No closing summary - the notebook ends after the last step
+
+**Example intro cell (tutorial)**:
 
 ```markdown
-# Reduction Forecasting with sklearn
+# Your First Pipeline
 
-## What You'll Learn
+In this notebook, we will build a small Sklearn-Optuna pipeline end to end
+and inspect what it produces.
 
-- How `PointReductionForecaster` tabularizes time series data using lag features
-- The difference between `target_transformer` and `feature_transformer` parameters
-- Tuning hyperparameters with `GridSearchCV`
+**Prerequisites:** Python 3.11+ and basic familiarity with sklearn_optuna.
+```
 
-## Prerequisites
+**Example intro cell (how-to)**:
 
-Basic familiarity with sklearn's fit/predict API and time series concepts (trend, seasonality).
+```markdown
+# How to Handle Missing Values
+
+This notebook shows how to configure sklearn_optuna to drop incomplete
+records before processing.
+
+**Prerequisites:** Familiarity with the
+quickstart ([View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)).
 ```
 
 #### Marimo Cell Conventions
@@ -494,12 +548,11 @@ Basic familiarity with sklearn's fit/predict API and time series concepts (trend
 
 #### Content Guidelines
 
-- **Gallery metadata**: Every example notebook should include a `__gallery__` variable in the first `@app.cell` defining `title`, `description`, and `category` for the example gallery.
-- **Markdown density**: Each numbered section should open with a descriptive markdown cell explaining the concept before any code cells. Consecutive code cells within the same section are acceptable when logically grouped.
+- **Gallery metadata**: Every example notebook should include a `__gallery__` variable defining `title`, `description`, and `category` (`"tutorial"` or `"how-to"`) for the example gallery. Add a `companion` key pointing to the matching doc page path when one exists.
+- **Markdown density**: Each numbered section should open with a short markdown cell (one to two sentences) before any code cells. Tutorial sections may be slightly longer; how-to sections should be action-only.
 - **No emojis**: Do not use emojis anywhere in notebooks whether it is in headings, content bullets, or concluding remarks.
-- **API cross-links**: When mentioning sklearn_optuna classes or functions in markdown cells, wrap them in backtick-link syntax pointing to the API page (e.g., `` [`SeasonalNaive`](/pages/api/generated/sklearn_optuna.point.naive.SeasonalNaive/) ``).
-- **Key Takeaways format**: Use bold for key terms with plain descriptions (e.g., `- **Reduction forecasting** converts time series into tabular regression via lag features`)
-- **Next Steps format**: Use bold labels with linked notebook references (e.g., `- **Naive baselines**: See [`naive_forecasters.py`](/examples/point/naive_forecasters/) to compare`). Always link to the rendered example page, not the raw file.
+- **API cross-links**: When mentioning sklearn_optuna classes or functions in markdown cells, wrap them in backtick-link syntax pointing to the API page.
+- **Voice**: Tutorials use "we" (first-person plural). How-to guides use imperative or conditional imperatives ("If you need X, pass Y").
 
 #### Testing and Documentation
 
@@ -523,7 +576,7 @@ Run the example test suite to verify your notebook passes:
     uv run pytest tests/test_examples.py -m example
     ```
 
-Add a link to your example in `docs/pages/tutorials/examples.md`:
+Add a link to your example in `docs/pages/examples/index.md`:
 
 ```markdown
 - [Example Name](../examples/<name>/) - Brief description
@@ -625,31 +678,31 @@ graph LR
     ```
 
 2. **Automated changelog workflow** (`changelog.yml`):
-   - Generates changelog from conventional commits using git-cliff
-   - Creates a **Pull Request** with the updated CHANGELOG.md
-   - Builds the package distributions (wheels and sdist) for **immediate validation**
-   - Stores distributions as workflow artifacts (reused later to avoid rebuilding)
+    - Generates changelog from conventional commits using git-cliff
+    - Creates a **Pull Request** with the updated CHANGELOG.md
+    - Builds the package distributions (wheels and sdist) for **immediate validation**
+    - Stores distributions as workflow artifacts (reused later to avoid rebuilding)
 
 3. **Review and merge the changelog PR:**
-   - A maintainer reviews the generated changelog
-   - Once approved, merge the PR to main
+    - A maintainer reviews the generated changelog
+    - Once approved, merge the PR to main
 
 4. **Automated release workflow** (`publish-release.yml`):
-   - Creates a GitHub Release with generated release notes
-   - Attaches distribution files to the release
-   - **Waits for manual approval** before proceeding to PyPI
+    - Creates a GitHub Release with generated release notes
+    - Attaches distribution files to the release
+    - **Waits for manual approval** before proceeding to PyPI
 
 5. **Manual approval for PyPI publishing:**
-   - Designated reviewers receive a notification
-   - Review the GitHub Release to verify everything is correct
-   - Approve the deployment to publish to PyPI
-   - Package is published using Trusted Publishing (OIDC, no tokens needed)
+    - Designated reviewers receive a notification
+    - Review the GitHub Release to verify everything is correct
+    - Approve the deployment to publish to PyPI
+    - Package is published using Trusted Publishing (OIDC, no tokens needed)
 
 6. **Release notes generation:**
-   - All commits since the last tag are analyzed
-   - Commits are grouped by type (Added, Fixed, Documentation, etc.)
-   - Only commits following conventional format are included
-   - Breaking changes are highlighted
+    - All commits since the last tag are analyzed
+    - Commits are grouped by type (Added, Fixed, Documentation, etc.)
+    - Only commits following conventional format are included
+    - Breaking changes are highlighted
 
 ### Version Numbering
 

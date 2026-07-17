@@ -1,3 +1,7 @@
+---
+description: How the Scikit-Learn and Optuna ecosystems fit together, and the trade-offs the integration makes.
+---
+
 # Concepts and Architecture
 
 Sklearn-Optuna bridges two ecosystems: Scikit-Learn's estimator API and

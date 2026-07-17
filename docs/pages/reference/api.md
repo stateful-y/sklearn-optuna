@@ -1,5 +1,6 @@
 ---
 template: api-index.html
+description: Every public class and function, with signatures, parameters, and return values.
 ---
 
 # API Reference

@@ -32,7 +32,7 @@
 
     Explore interactive notebooks from quickstart to pipelines.
 
-    [Examples](pages/tutorials/examples.md)
+    [Examples](pages/examples/index.md)
 
 - **API Reference**
 

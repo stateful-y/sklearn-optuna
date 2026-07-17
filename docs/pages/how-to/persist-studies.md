@@ -1,9 +1,5 @@
 # How to Persist and Resume Studies
 
-!!! tip "Interactive notebook"
-    See the companion notebook for a runnable example.
-    [View](/examples/study_management/) · [Open in marimo](/examples/study_management/edit/)
-
 This guide shows you how to save optimization results to a database and resume
 a search from where it left off. Use this when experiments are long-running or
 you want to build on previous results.
@@ -12,6 +8,8 @@ you want to build on previous results.
 
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
+
+<!-- COMPANION_NOTEBOOKS -->
 
 ## Save Trials to a Database
 

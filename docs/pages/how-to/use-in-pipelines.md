@@ -1,9 +1,5 @@
 # How to Use in Pipelines
 
-!!! tip "Interactive notebook"
-    See the companion notebook for a runnable example.
-    [View](/examples/pipelines/) · [Open in marimo](/examples/pipelines/edit/)
-
 This guide shows you how to use `OptunaSearchCV` with Scikit-Learn pipelines.
 Use this when you need to tune hyperparameters of estimators inside a pipeline,
 or nest `OptunaSearchCV` as a pipeline step.
@@ -12,6 +8,8 @@ or nest `OptunaSearchCV` as a pipeline step.
 
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - Familiarity with Scikit-Learn's `Pipeline`
+
+<!-- COMPANION_NOTEBOOKS -->
 
 ## Tune Pipeline Sub-Estimator Parameters
 

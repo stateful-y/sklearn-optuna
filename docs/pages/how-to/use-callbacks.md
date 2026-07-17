@@ -1,9 +1,5 @@
 # How to Use Callbacks
 
-!!! tip "Interactive notebook"
-    See the companion notebook for a runnable example.
-    [View](/examples/callbacks/) · [Open in marimo](/examples/callbacks/edit/)
-
 This guide shows you how to attach callbacks to control optimization behavior.
 Use this when you need to stop the search early, log progress, or implement
 custom stopping criteria.
@@ -12,6 +8,8 @@ custom stopping criteria.
 
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
+
+<!-- COMPANION_NOTEBOOKS -->
 
 ## Add a Callback
 

@@ -10,9 +10,7 @@ not converge.
 - Sklearn-Optuna installed ([Getting Started](../tutorials/getting-started.md))
 - A working `OptunaSearchCV` search
 
-!!! tip "Interactive version available"
-    Try this guide as an interactive notebook:
-    [View](/examples/handle_errors/) · [Open in marimo](/examples/handle_errors/edit/)
+<!-- COMPANION_NOTEBOOKS -->
 
 ## Control Behavior on Fit Failures
 

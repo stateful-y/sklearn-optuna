@@ -1,3 +1,7 @@
+---
+description: Runnable marimo notebooks for every tutorial and how-to, readable as pages or editable in the browser.
+---
+
 # Examples
 
 Interactive notebooks grouped by purpose: **Tutorials** walk through a topic step-by-step, while **How-to Guides** solve a specific task.

@@ -1,13 +1,15 @@
-# Getting Started
+---
+description: Install the package and run your first hyperparameter search with OptunaSearchCV.
+---
 
-!!! tip "Interactive notebook"
-    Follow along in the Quickstart notebook for a hands-on version of this tutorial.
-    [View](/examples/quickstart/) · [Open in marimo](/examples/quickstart/edit/)
+# Getting Started
 
 In this tutorial, we will run an Optuna-powered hyperparameter search using
 Scikit-Learn's familiar `fit()` / `best_params_` API. Along the way, we will
 install the package, define an Optuna search space, create an `OptunaSearchCV`
 instance, and inspect the results.
+
+<!-- COMPANION_NOTEBOOKS -->
 
 ## Prerequisites
 
@@ -142,7 +144,7 @@ API. Along the way, we:
 
 ## Try Interactive Examples
 
-For hands-on learning with interactive notebooks, see the [Examples](examples.md) page where you can:
+For hands-on learning with interactive notebooks, see the [Examples](../examples/index.md) page where you can:
 
 - Run code directly in your browser via WebAssembly
 - Experiment with different parameters
@@ -168,4 +170,4 @@ Or run locally:
 - [How to Use Callbacks](../how-to/use-callbacks.md): control when optimization stops
 - [How to Use in Pipelines](../how-to/use-in-pipelines.md): tune hyperparameters inside Scikit-Learn pipelines
 - [Concepts and Architecture](../explanation/concepts.md): understand how OptunaSearchCV works under the hood
-- [Examples](examples.md): interactive notebooks with more advanced use cases
+- [Examples](../examples/index.md): interactive notebooks with more advanced use cases
