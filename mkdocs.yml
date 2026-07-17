@@ -170,14 +170,14 @@ nav:
     - Contributing: pages/how-to/contribute.md
   - Examples:
     - pages/examples/index.md
+  - Explanation:
+    - pages/explanation/index.md
+    - Concepts: pages/explanation/concepts.md
   - Reference:
     - pages/reference/index.md
     - API: pages/reference/api.md
     - Configuration: pages/reference/configuration.md
     - Changelog: pages/reference/changelog.md
-  - Explanation:
-    - pages/explanation/index.md
-    - Concepts: pages/explanation/concepts.md
 
 extra:
   social:
