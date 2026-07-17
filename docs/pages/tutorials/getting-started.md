@@ -9,12 +9,12 @@ Scikit-Learn's familiar `fit()` / `best_params_` API. Along the way, we will
 install the package, define an Optuna search space, create an `OptunaSearchCV`
 instance, and inspect the results.
 
+<!-- COMPANION_NOTEBOOKS -->
+
 ## Prerequisites
 
 - Python 3.11+ installed
 - A terminal or command prompt
-
-<!-- COMPANION_NOTEBOOKS -->
 
 ## Installation
 
