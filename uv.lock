@@ -1698,6 +1698,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "covdefaults" },
+    { name = "griffe" },
     { name = "hypothesis" },
     { name = "interrogate" },
     { name = "marimo" },
@@ -1712,16 +1713,19 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-mock" },
     { name = "pytest-xdist" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "rumdl" },
     { name = "ty" },
 ]
 docs = [
+    { name = "griffe" },
     { name = "mkdocs" },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "pymdown-extensions" },
+    { name = "pyyaml" },
 ]
 examples = [
     { name = "marimo" },
@@ -1756,6 +1760,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "covdefaults", specifier = ">=2.3" },
+    { name = "griffe", specifier = ">=1.0" },
     { name = "hypothesis", specifier = ">=6.100" },
     { name = "interrogate", specifier = ">=1.7.0" },
     { name = "marimo", specifier = ">=0.19.0" },
@@ -1770,16 +1775,19 @@ dev = [
     { name = "pytest-cov", specifier = ">=7.0" },
     { name = "pytest-mock", specifier = ">=3.14" },
     { name = "pytest-xdist", specifier = ">=3.8" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.8.0" },
     { name = "rumdl", specifier = ">=0.1.33" },
     { name = "ty", specifier = ">=0.0.12" },
 ]
 docs = [
+    { name = "griffe", specifier = ">=1.0" },
     { name = "mkdocs", specifier = ">=1.6.0" },
     { name = "mkdocs-autorefs", specifier = ">=1.0" },
     { name = "mkdocs-material", specifier = ">=9.7" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.26.0" },
     { name = "pymdown-extensions", specifier = ">=10.20.1" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 examples = [
     { name = "marimo", specifier = ">=0.19.0" },
