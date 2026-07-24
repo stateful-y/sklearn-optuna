@@ -263,9 +263,7 @@ class OptunaSearchCV(BaseSearchCV):
 
     References
     ----------
-    .. [1] Akiba, T., Sano, S., Yanase, T., Ohta, T., & Koyama, M. (2019).
-       Optuna: A Next-generation Hyperparameter Optimization Framework.
-       In KDD. https://doi.org/10.1145/3292500.3330701
+    1. [Akiba, T., Sano, S., Yanase, T., Ohta, T., & Koyama, M. (2019). Optuna: A Next-generation Hyperparameter Optimization Framework. In KDD.](https://doi.org/10.1145/3292500.3330701)
     """
 
     _parameter_constraints = {
