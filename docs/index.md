@@ -1,7 +1,7 @@
 ![](assets/logo_dark.png#only-dark){width=800}
 ![](assets/logo_light.png#only-light){width=800}
 
-# Welcome to Sklearn-Optuna's documentation
+# Welcome to Sklearn-Optuna's documentation!
 
 `OptunaSearchCV` is a drop-in replacement for Scikit-Learn's `GridSearchCV` and `RandomizedSearchCV` powered by [Optuna](https://optuna.org/). It extends `BaseSearchCV`, so `fit()`, `score()`, `best_params_`, `cv_results_`, pipelines, and `clone()` all work out of the box. Optuna samplers (TPE, CMA-ES, ...) explore search spaces more efficiently than grid or random search, while Optuna distributions give you log-scaled, bounded, and categorical parameter spaces.
 
