@@ -226,7 +226,7 @@ class _Objective:
 
         # At this point error_score must be numeric (not "raise")
         error_value = self.error_score
-        assert isinstance(error_value, int | float)
+        assert isinstance(error_value, int | float)  # noqa: S101 -- type-narrowing guard; the "raise" case is handled above
 
         if np.isnan(error_value):
             return float("-inf")
