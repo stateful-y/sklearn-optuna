@@ -126,6 +126,25 @@ For questions and discussions, you can also open a [discussion](https://github.c
 
 This project is licensed under the terms of the [Apache-2.0 License](https://github.com/stateful-y/sklearn-optuna/blob/main/LICENSE).
 
+## How do I cite Sklearn-Optuna?
+
+If you use Sklearn-Optuna in work you publish, please cite it:
+
+Guillaume Tauzin. Sklearn-Optuna: An Optuna integration for hyperparameter tuning in Scikit-Learn. https://github.com/stateful-y/sklearn-optuna
+
+Or in BibTeX:
+
+```bibtex
+@software{sklearn_optuna,
+  author  = "Guillaume Tauzin",
+  title   = "{Sklearn-Optuna: An Optuna integration for hyperparameter tuning in Scikit-Learn}",
+  url     = "https://github.com/stateful-y/sklearn-optuna",
+  license = "Apache-2.0"
+}
+```
+
+Reference managers can read [CITATION.cff](https://github.com/stateful-y/sklearn-optuna/blob/main/CITATION.cff) directly. To cite a specific version, see the [citation page](https://sklearn-optuna.readthedocs.io/en/latest/pages/reference/citation/).
+
 ## Acknowledgements
 
 This project is maintained by [stateful-y](https://stateful-y.io), an ML consultancy specializing in data science & engineering. If you're interested in collaborating or learning more about our services, please visit our website.
