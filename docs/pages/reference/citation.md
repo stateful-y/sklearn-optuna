@@ -8,14 +8,14 @@ If you use Sklearn-Optuna in work you publish, please cite it.
 
 ## Plain text
 
-Guillaume Tauzin. Sklearn-Optuna. https://github.com/stateful-y/sklearn-optuna
+Guillaume Tauzin. Sklearn-Optuna: An Optuna integration for hyperparameter tuning in Scikit-Learn. https://github.com/stateful-y/sklearn-optuna
 
 ## BibTeX
 
 ```bibtex
 @software{sklearn_optuna,
   author  = "Guillaume Tauzin",
-  title   = "{Sklearn-Optuna}",
+  title   = "{Sklearn-Optuna: An Optuna integration for hyperparameter tuning in Scikit-Learn}",
   url     = "https://github.com/stateful-y/sklearn-optuna",
   license = "Apache-2.0"
 }

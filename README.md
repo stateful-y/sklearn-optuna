@@ -130,14 +130,14 @@ This project is licensed under the terms of the [Apache-2.0 License](https://git
 
 If you use Sklearn-Optuna in work you publish, please cite it:
 
-Guillaume Tauzin. Sklearn-Optuna. https://github.com/stateful-y/sklearn-optuna
+Guillaume Tauzin. Sklearn-Optuna: An Optuna integration for hyperparameter tuning in Scikit-Learn. https://github.com/stateful-y/sklearn-optuna
 
 Or in BibTeX:
 
 ```bibtex
 @software{sklearn_optuna,
   author  = "Guillaume Tauzin",
-  title   = "{Sklearn-Optuna}",
+  title   = "{Sklearn-Optuna: An Optuna integration for hyperparameter tuning in Scikit-Learn}",
   url     = "https://github.com/stateful-y/sklearn-optuna",
   license = "Apache-2.0"
 }
