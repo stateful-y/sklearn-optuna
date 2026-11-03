@@ -29,6 +29,7 @@ With Sklearn-Optuna, you gain immediate access to sophisticated Bayesian optimiz
 - **Flexible distributions**: Optuna distributions (`FloatDistribution`, `IntDistribution`, `CategoricalDistribution`) for log-scaled, bounded, and categorical spaces
 - **Study persistence**: Pass a `Storage` backend to persist trials to a database, or resume optimization by passing an existing study to `fit()`
 - **Callbacks**: Attach Optuna callbacks (e.g., `MaxTrialsCallback`) to control optimization flow
+- **Pruning**: Pass a `Pruner` to stop trials that are reliably worse than the best one after a few folds, instead of running every fold
 - **Nested pipeline search**: Use `OptunaSearchCV` inside another `OptunaSearchCV` for hierarchical hyperparameter optimization
 
 ## How to install Sklearn-Optuna?

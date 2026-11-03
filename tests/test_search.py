@@ -3,6 +3,7 @@
 import contextlib
 import pickle
 import time
+import warnings
 from unittest.mock import Mock
 
 import numpy as np
@@ -1542,3 +1543,155 @@ class TestOptunaSearchCVIntegration:
 
         # Study sampler should be updated
         assert isinstance(optuna_study.sampler, RandomSampler)
+
+
+class TestFoldLoop:
+    """The objective fits and scores folds itself; these tests pin parity with cross_validate."""
+
+    @pytest.mark.parametrize(
+        "case",
+        [
+            pytest.param({}, id="single-metric"),
+            pytest.param(
+                {"scoring": {"acc": "accuracy", "f1": "f1_macro"}, "refit": "acc", "return_train_score": True},
+                id="multi-metric-with-train",
+            ),
+            pytest.param({"scoring": lambda est, X, y: est.score(X, y)}, id="callable-scoring"),
+        ],
+    )
+    def test_matches_cross_validate(self, simple_classification_data, case):
+        """Every row of cv_results_ equals a direct cross_validate run on that trial's parameters."""
+        from sklearn.model_selection import KFold, cross_validate
+
+        X, y = simple_classification_data
+        cv = KFold(n_splits=3)
+        search = OptunaSearchCV(
+            SVC(),
+            {"C": FloatDistribution(0.1, 10.0)},
+            sampler=Sampler(sampler=RandomSampler, seed=0),
+            n_trials=4,
+            cv=cv,
+            **case,
+        )
+        search.fit(X, y)
+
+        assert len(search.cv_results_["params"]) == 4
+        for i, trial in enumerate(search.trials_):
+            assert search.cv_results_["params"][i] == trial.params
+            reference = cross_validate(
+                SVC().set_params(**trial.params),
+                X,
+                y,
+                cv=cv,
+                scoring=case.get("scoring"),
+                return_train_score=case.get("return_train_score", False),
+            )
+            _assert_row_matches(search.cv_results_, i, reference)
+
+    def test_matches_cross_validate_with_groups(self, simple_classification_data):
+        """A grouped splitter receives the routed groups exactly as cross_validate would."""
+        from sklearn.model_selection import GroupKFold, cross_validate
+
+        X, y = simple_classification_data
+        groups = np.arange(len(y)) % 4
+        cv = GroupKFold(n_splits=3)
+        search = OptunaSearchCV(
+            SVC(),
+            {"C": FloatDistribution(0.1, 10.0)},
+            sampler=Sampler(sampler=RandomSampler, seed=0),
+            n_trials=3,
+            cv=cv,
+        )
+        search.fit(X, y, groups=groups)
+
+        for i, trial in enumerate(search.trials_):
+            reference = cross_validate(SVC().set_params(**trial.params), X, y, cv=cv, groups=groups)
+            _assert_row_matches(search.cv_results_, i, reference)
+
+    def test_matches_cross_validate_with_failing_fold(self, simple_classification_data):
+        """A parameter value that cannot fit is error-scored like cross_validate scores it."""
+        from sklearn.model_selection import KFold, cross_validate
+
+        X, y = simple_classification_data
+        cv = KFold(n_splits=3)
+        search = OptunaSearchCV(
+            FailingClassifier(),
+            {"parameter": CategoricalDistribution([0, FailingClassifier.FAILING_PARAMETER])},
+            sampler=Sampler(sampler=RandomSampler, seed=0),
+            n_trials=6,
+            cv=cv,
+            error_score=np.nan,
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # FitFailedWarning from the failing folds
+            search.fit(X, y)
+
+        failing = [t for t in search.trials_ if t.params["parameter"] == FailingClassifier.FAILING_PARAMETER]
+        assert failing, "the sampler never drew the failing value"
+        for i, trial in enumerate(search.trials_):
+            if trial.params["parameter"] == FailingClassifier.FAILING_PARAMETER:
+                # cross_validate raises when every fold fails; the search records a NaN row instead.
+                with pytest.raises(ValueError, match="All the 3 fits failed"), warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    cross_validate(FailingClassifier().set_params(**trial.params), X, y, cv=cv, error_score=np.nan)
+                assert np.isnan(search.cv_results_["mean_test_score"][i])
+                assert all(np.isnan(search.cv_results_[f"split{j}_test_score"][i]) for j in range(3))
+                assert np.isfinite(search.cv_results_["mean_fit_time"][i])
+                assert trial.user_attrs["exception_type"] == "ValueError"
+            else:
+                reference = cross_validate(FailingClassifier().set_params(**trial.params), X, y, cv=cv)
+                _assert_row_matches(search.cv_results_, i, reference)
+
+    def test_n_splits_default_splitter(self, simple_classification_data):
+        """cv=None resolves to five folds and n_splits_ says so."""
+        X, y = simple_classification_data
+        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, n_trials=2, cv=None)
+        search.fit(X, y)
+        assert search.n_splits_ == 5
+        assert "split4_test_score" in search.cv_results_
+        assert "split5_test_score" not in search.cv_results_
+
+    def test_n_splits_explicit_splitter(self, simple_classification_data):
+        """An explicit splitter's fold count is exposed."""
+        from sklearn.model_selection import KFold
+
+        X, y = simple_classification_data
+        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, n_trials=2, cv=KFold(n_splits=3))
+        search.fit(X, y)
+        assert search.n_splits_ == 3
+
+    def test_split_attributes_written_per_fold(self, simple_classification_data):
+        """Fold 0's attributes are on the trial while fold 1 is being scored; the mean is not."""
+        X, y = simple_classification_data
+        study = optuna.create_study(direction="maximize")
+        observed = {}
+        calls = [0]
+
+        def scorer(estimator, X_test, y_test):
+            calls[0] += 1
+            if calls[0] == 2:  # scoring fold 1 of the only trial
+                observed.update(study.trials[-1].user_attrs)
+            return estimator.score(X_test, y_test)
+
+        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, scoring=scorer, n_trials=1, cv=2)
+        search.fit(X, y, study=study)
+
+        assert "split0_test_score" in observed
+        assert "split0_fit_time" in observed
+        assert "split0_score_time" in observed
+        assert "split1_test_score" not in observed
+        assert "mean_test_score" not in observed
+        assert "mean_fit_time" not in observed
+
+
+def _assert_row_matches(cv_results, row, reference):
+    """Compare one cv_results_ row with a cross_validate result dict."""
+    for key, values in reference.items():
+        if not (key.startswith("test_") or key.startswith("train_")):
+            continue
+        np.testing.assert_allclose(cv_results[f"mean_{key}"][row], np.nanmean(values), equal_nan=True)
+        for j, value in enumerate(values):
+            np.testing.assert_allclose(cv_results[f"split{j}_{key}"][row], value, equal_nan=True)
+    for key in ("mean_fit_time", "std_fit_time", "mean_score_time", "std_score_time"):
+        assert np.isfinite(cv_results[key][row])
+        assert cv_results[key][row] >= 0.0

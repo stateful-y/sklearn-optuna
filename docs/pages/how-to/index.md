@@ -6,6 +6,7 @@ Task-oriented guides for common workflows. Each guide assumes you have already c
 
 - [Configure Samplers](configure-samplers.md): choose and configure Optuna samplers, set seeds for reproducibility
 - [Use Callbacks](use-callbacks.md): stop optimization early with trial limits, timeouts, or custom conditions
+- [Prune Unpromising Trials](prune-trials.md): stop a trial after a few folds when it is reliably worse than the best one
 - [Score Multiple Metrics](score-multiple-metrics.md): evaluate configurations against multiple scoring metrics simultaneously
 - [Visualize Results](visualize-results.md): plot optimization history and parameter importance with Optuna's visualization tools
 

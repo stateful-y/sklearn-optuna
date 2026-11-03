@@ -54,6 +54,54 @@ class Storage(BaseClassWrapper):
         super().__init__(storage=storage, **params)
 
 
+class Pruner(BaseClassWrapper):
+    """Wrapper for Optuna pruners that stop unpromising trials early.
+
+    ``OptunaSearchCV`` reports each cross-validation fold's test score to the
+    trial as an intermediate value. When a ``Pruner`` is given, the pruner is
+    consulted after each fold and a trial that is reliably worse than the best
+    one is stopped before its remaining folds run.
+
+    Parameters
+    ----------
+    pruner : type, default=optuna.pruners.WilcoxonPruner
+        Optuna pruner class to instantiate. The default compares the current
+        trial's fold scores with the best trial's scores on the same folds
+        using a paired statistical test, which is the comparison Optuna
+        recommends for cross-validation scores. At its default threshold it
+        needs at least four folds before it can stop a trial.
+
+    **params : dict
+        Parameters to pass to the pruner constructor.
+
+    See Also
+    --------
+    sklearn_optuna.search.OptunaSearchCV : The main search class that uses pruners.
+    sklearn_optuna.optuna.Sampler : Wrapper for Optuna samplers.
+
+    Notes
+    -----
+    Optuna marks ``WilcoxonPruner`` as experimental and emits an
+    ``ExperimentalWarning`` when it is instantiated.
+
+    Examples
+    --------
+    >>> import optuna
+    >>> from sklearn_optuna import Pruner
+    >>> pruner = Pruner(pruner=optuna.pruners.MedianPruner, n_warmup_steps=1)
+    >>> pruner.instantiate().instance_
+    <optuna.pruners._median.MedianPruner object at ...>
+
+    """
+
+    _estimator_name = "pruner"
+    _estimator_base_class = optuna.pruners.BasePruner
+    _estimator_default_class = optuna.pruners.WilcoxonPruner
+
+    def __init__(self, pruner: type = optuna.pruners.WilcoxonPruner, **params) -> None:
+        super().__init__(pruner=pruner, **params)
+
+
 class Callback(BaseClassWrapper):
     """Wrapper for Optuna callback classes invoked during optimization.
 
