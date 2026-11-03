@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.1.0-alpha.6] - 2026-11-03
+
+This **minor release** includes 11 commits.
+
+
+### Features
+- Add fold-level trial pruning to OptunaSearchCV  ([#194](https://github.com/stateful-y/sklearn-optuna/pull/194)) by @gtauzin
+
+### Bug Fixes
+- Bump vulnerable transitive dependencies  ([#149](https://github.com/stateful-y/sklearn-optuna/pull/149)) by @gtauzin
+- Link the issue chooser to private vulnerability reporting and the real docs  ([#169](https://github.com/stateful-y/sklearn-optuna/pull/169)) by @gtauzin
+- Never automerge into a branch that requires no checks  ([#179](https://github.com/stateful-y/sklearn-optuna/pull/179)) by @gtauzin
+- Enable auto-merge as the App so the automerge queue drains  ([#183](https://github.com/stateful-y/sklearn-optuna/pull/183)) by @gtauzin
+- Pin ty and the Python of every nox session  ([#191](https://github.com/stateful-y/sklearn-optuna/pull/191)) by @gtauzin
+
+### Documentation
+- Tell users how to cite sklearn-optuna  ([#76](https://github.com/stateful-y/sklearn-optuna/pull/76)) by @gtauzin
+
+### Miscellaneous Tasks
+- Verify tag signatures, allow publish retries, and automerge dep updates  ([#75](https://github.com/stateful-y/sklearn-optuna/pull/75)) by @gtauzin
+- Drain the dependency queue one PR at a time  ([#84](https://github.com/stateful-y/sklearn-optuna/pull/84)) by @gtauzin
+- Pin the Python version installed by the lint and commit-message jobs  ([#168](https://github.com/stateful-y/sklearn-optuna/pull/168)) by @gtauzin
+- Update from template v0.45.0  ([#172](https://github.com/stateful-y/sklearn-optuna/pull/172)) by @gtauzin
+
+### Contributors
+
+Thanks to all contributors for this release:
+- @gtauzin
+
 ## [0.1.0-alpha.5] - 2026-08-12
 
 This **minor release** includes 24 commits.
