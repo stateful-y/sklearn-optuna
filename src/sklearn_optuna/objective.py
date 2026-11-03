@@ -37,9 +37,9 @@ class _Objective:
     y : array-like
         Target values.
 
-    cv : cross-validation generator
-        Resolved cross-validation splitting strategy (the output of
-        ``check_cv``).
+    splits : list of (train, test) index arrays
+        The cross-validation folds, computed once per ``fit()`` so that every
+        trial is scored on the same data.
 
     scorers : callable or _MultimetricScorer
         Scoring function(s), as returned by ``BaseSearchCV._get_scorers``.
@@ -93,7 +93,7 @@ class _Objective:
         param_distributions: dict[str, Any],
         X: Any,
         y: Any,
-        cv: Any,
+        splits: list[tuple[Any, Any]],
         scorers: Any,
         routed_params: Any,
         *,
@@ -108,7 +108,7 @@ class _Objective:
         self.param_distributions = param_distributions
         self.X = X
         self.y = y
-        self.cv = cv
+        self.splits = splits
         self.scorers = scorers
         self.routed_params = routed_params
         self.verbose = verbose
@@ -134,7 +134,10 @@ class _Objective:
         Raises
         ------
         optuna.TrialPruned
-            If the pruner stopped the trial, or user code raised it.
+            If the pruner stopped the trial. A ``TrialPruned`` raised inside
+            the estimator's ``fit`` propagates only under
+            ``error_score="raise"``; otherwise scikit-learn scores that fold
+            with ``error_score``, as it does for any exception.
         """
         # Suggest parameters
         study_params = self._suggest_parameters(trial)
@@ -180,15 +183,14 @@ class _Objective:
         makes per-fold reporting and pruning possible.
         """
         base_estimator = clone(self.estimator)
-        splits = list(self.cv.split(self.X, self.y, **self.routed_params.splitter.split))
 
         if self.verbose > 0:
             # Same shape as BaseSearchCV's per-batch message; the per-fold
             # messages come from _fit_and_score at verbose > 1.
-            print(f"[Trial {trial.number}] Fitting {len(splits)} folds for parameters {params}")  # noqa: T201
+            print(f"[Trial {trial.number}] Fitting {len(self.splits)} folds for parameters {params}")  # noqa: T201
 
         results: list[dict[str, Any]] = []
-        for fold_idx, (train, test) in enumerate(splits):
+        for fold_idx, (train, test) in enumerate(self.splits):
             result = _fit_and_score(
                 clone(base_estimator),
                 self.X,
@@ -243,18 +245,22 @@ class _Objective:
         """Store ``split{i}_{kind}_{metric}`` attributes for one fold."""
         if isinstance(scores, dict):
             for metric_name, value in scores.items():
-                trial.set_user_attr(f"split{fold_idx}_{kind}_{metric_name}", _as_float(value))
+                trial.set_user_attr(f"split{fold_idx}_{kind}_{metric_name}", float(value))
         else:
-            trial.set_user_attr(f"split{fold_idx}_{kind}_score", _as_float(scores))
+            trial.set_user_attr(f"split{fold_idx}_{kind}_score", float(scores))
 
-    def _optimized_fold_score(self, test_scores: Any) -> float:
-        """Return the fold score of the metric the search optimizes."""
+    def _get_primary_metric_name(self, metric_names: list[str]) -> str | None:
+        """Return the metric the search optimizes: ``refit`` when it names one, else the first."""
+        if isinstance(self.refit, str):
+            return self.refit
+        return metric_names[0] if metric_names else None
+
+    def _get_optimized_fold_score(self, test_scores: Any) -> float:
+        """Return one fold's score for the metric the search optimizes, NaN if absent."""
         if isinstance(test_scores, dict):
-            if self.refit and isinstance(self.refit, str):
-                return _as_float(test_scores.get(self.refit, float("nan")))
-            # First scorer, which is the metric _handle_multimetric_scores optimizes.
-            return _as_float(next(iter(test_scores.values()), float("nan")))
-        return _as_float(test_scores)
+            name = self._get_primary_metric_name(list(test_scores))
+            return float(test_scores.get(name, float("nan"))) if name is not None else float("nan")
+        return float(test_scores)
 
     def _report_fold(self, trial: optuna.trial.Trial, fold_idx: int, test_scores: Any) -> None:
         """Report a finite fold score to the trial and prune when asked to.
@@ -263,7 +269,7 @@ class _Objective:
         not a measurement, so it is not reported: the pruners disagree on
         what NaN means and none of them should act on it.
         """
-        value = self._optimized_fold_score(test_scores)
+        value = self._get_optimized_fold_score(test_scores)
         if not np.isfinite(value):
             return
 
@@ -291,17 +297,11 @@ class _Objective:
                 metric_name = key[6:]  # remove 'train_'
                 trial.set_user_attr(f"mean_train_{metric_name}", _nanmean(val_array))
 
-        # Determine primary metric to optimize
-        if self.refit and isinstance(self.refit, str):
-            metric_to_optimize = trial.user_attrs[f"mean_test_{self.refit}"]
-        else:
-            # Use first scorer from scores result if available
-            test_keys = [k for k in scores if k.startswith("test_")]
-            if not test_keys:
-                raise ValueError("No test scores found in cross-validation result.")
-            first_scorer = test_keys[0][5:]
-
-            metric_to_optimize = trial.user_attrs[f"mean_test_{first_scorer}"]
+        # Same rule as the per-fold reports: refit's metric, else the first scorer.
+        name = self._get_primary_metric_name([k[5:] for k in scores if k.startswith("test_")])
+        if name is None:
+            raise ValueError("No test scores found in cross-validation result.")
+        metric_to_optimize = trial.user_attrs[f"mean_test_{name}"]
 
         if np.isnan(metric_to_optimize):
             return float("-inf")
@@ -334,14 +334,6 @@ class _Objective:
         if np.isnan(error_value):
             return float("-inf")
         return error_value
-
-
-def _as_float(value: Any) -> float:
-    """Coerce a score to float, mapping anything non-numeric to NaN."""
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return float("nan")
 
 
 def _nanmean(values: Any) -> float:

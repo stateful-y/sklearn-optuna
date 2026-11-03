@@ -389,7 +389,7 @@ def test_multimetric_nan_optimization_metric(mock_data):
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2, scoring={"acc": "accuracy"}, refit="acc")
 
     with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
-        mock_fold.return_value = _fold({"acc": np.nan}, {"acc": 0.5})
+        mock_fold.return_value = _fold({"acc": np.nan})
         search.fit(X, y)
     assert search.trials_[0].value == float("-inf")
 

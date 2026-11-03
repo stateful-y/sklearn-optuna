@@ -49,27 +49,6 @@ If you see this warning, raise `cv` to at least 5, or switch to a pruner with
 a lower warm-up (next section). Raising `p_threshold` makes the test act
 earlier but also makes it wrong more often.
 
-## Keep Folds Identical Across Trials
-
-The pruner pairs fold `i` of one trial with fold `i` of another, so every
-trial must be scored on the same splits. Non-shuffling splitters, and
-shuffling ones with a fixed seed, are fine:
-
-```python
-from sklearn.model_selection import KFold
-
-search = OptunaSearchCV(
-    estimator, param_distributions,
-    pruner=Pruner(),
-    cv=KFold(n_splits=5, shuffle=True, random_state=0),
-)
-```
-
-If you pass a shuffling splitter without `random_state`, `fit()` warns that
-each trial is scored on different folds. Set the seed, or use `KFold` without
-shuffling. A custom iterable of splits cannot be checked; make sure it yields
-the same splits on every pass.
-
 ## Choose a Different Pruner
 
 Any Optuna pruner class can be wrapped. `MedianPruner` stops a trial whose
@@ -143,20 +122,32 @@ Each line is one trial across folds; pruned trials end early.
 
 ## Resume a Study With a Pruner
 
-A study persisted before pruning was enabled has completed trials without
-intermediate values. The default pruner compares against the best completed
-trial's fold scores, so it stays silent until a trial run with the current
-release completes:
+Load the study and pass it to `fit()` with a pruner:
 
 ```python
+import optuna
+from sklearn.model_selection import KFold
+
+existing_study = optuna.load_study(study_name="svc_search", storage="sqlite:///study.db")
+
 search = OptunaSearchCV(
     estimator, param_distributions,
     pruner=Pruner(),
-    storage=storage,
-    cv=5,
+    cv=KFold(n_splits=5, shuffle=True, random_state=0),
 )
 search.fit(X, y, study=existing_study)
 ```
+
+Every `fit()` splits the data once and scores all its trials on those folds.
+A resumed `fit()` splits again, so its trials are only comparable with the
+earlier ones when the splitter returns the same folds every time: a
+non-shuffling splitter, or a shuffling one with an integer `random_state`, as
+above.
+
+If the study was created before pruning was enabled, its completed trials
+have no intermediate values. The default pruner compares against the best
+completed trial's fold scores, so it stays silent until a trial run with the
+current release completes.
 
 See [How to Persist and Resume Studies](persist-studies.md) for the storage
 setup. With a database storage, reporting adds one row per fold per trial.

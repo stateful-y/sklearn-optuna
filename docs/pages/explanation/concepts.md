@@ -49,8 +49,10 @@ parameters through, or nest Optuna objects in pipelines.
    as trial user attributes (`split0_test_score`, `split0_fit_time`, etc.) and
    its test score is reported to the trial as an intermediate value. The means
    (`mean_test_score`, `mean_fit_time`, etc.) are stored once every fold has
-   run. All of it is available through both Optuna's trial API and
-   Scikit-Learn's `cv_results_` dict.
+   run. Everything is available through Optuna's trial API; the per-fold
+   scores, the means, and the timing means and standard deviations also
+   appear in Scikit-Learn's `cv_results_` dict, while the per-fold timings
+   stay on the trial.
 
 4. **Result assembly**: After optimization completes, `_build_cv_results()`
    transforms the list of `FrozenTrial` objects into Scikit-Learn's standard
@@ -126,6 +128,17 @@ sequence is what lets a trial be stopped between folds.
 For CPU-bound workloads, this means the effective parallelism is at the trial
 level, not the fold level.
 
+### Multi-node optimization
+
+Because Optuna studies can be shared through a database backend, you can
+distribute trials across multiple machines. Each node runs its own
+`OptunaSearchCV.fit()` pointing to the same `Storage` and `study_name`, and
+Optuna coordinates trial suggestions automatically. See
+[How to Persist and Resume Studies](../how-to/persist-studies.md) for storage
+setup and Optuna's
+[distributed optimization guide](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html#multi-node-optimization)
+for the full pattern.
+
 ## Pruning
 
 Every trial reports each fold's test score to Optuna as an intermediate value
@@ -137,8 +150,9 @@ When you pass a `Pruner`, the objective asks it after every fold whether the
 trial should stop. The default wrapped pruner is Optuna's `WilcoxonPruner`,
 which runs a paired statistical test between this trial's fold scores and the
 best trial's scores on the same folds. Pairing fold `i` with fold `i` is only
-meaningful when fold `i` is the same data in every trial, so a shuffling
-splitter needs a fixed `random_state`. The test needs several pairs before it
+meaningful when fold `i` is the same data in every trial, which is why `fit()`
+splits the data once and scores every trial on those folds, whatever the
+splitter. The test needs several pairs before it
 can be confident: at its default threshold it cannot stop a trial before the
 fourth fold, so a three-fold search never prunes.
 
@@ -152,17 +166,6 @@ make the pruners disagree about what it means.
 
 See [How to Prune Unpromising Trials](../how-to/prune-trials.md) for the
 procedure.
-
-### Multi-node optimization
-
-Because Optuna studies can be shared through a database backend, you can
-distribute trials across multiple machines. Each node runs its own
-`OptunaSearchCV.fit()` pointing to the same `Storage` and `study_name`, and
-Optuna coordinates trial suggestions automatically. See
-[How to Persist and Resume Studies](../how-to/persist-studies.md) for storage
-setup and Optuna's
-[distributed optimization guide](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html#multi-node-optimization)
-for the full pattern.
 
 ## Limitations
 

@@ -8,11 +8,11 @@ import optuna
 import pytest
 from optuna.distributions import CategoricalDistribution, FloatDistribution
 from optuna.exceptions import ExperimentalWarning
-from optuna.pruners import MedianPruner, NopPruner, PercentilePruner, ThresholdPruner
+from optuna.pruners import MedianPruner, NopPruner, PercentilePruner, ThresholdPruner, WilcoxonPruner
 from optuna.samplers import RandomSampler
 from optuna.trial import TrialState
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import KFold, ShuffleSplit
+from sklearn.model_selection import KFold, RepeatedKFold, ShuffleSplit
 from sklearn.svm import SVC
 
 from conftest import FailingClassifier
@@ -43,7 +43,7 @@ class LevelClassifier(BaseEstimator, ClassifierMixin):
 
 
 class FirstFitFailsClassifier(BaseEstimator, ClassifierMixin):
-    """Classifier whose very first ``fit`` call in the process raises; later calls succeed."""
+    """Classifier whose first ``fit`` call after the per-test reset raises; later calls succeed."""
 
     failed_once: ClassVar[bool] = False
 
@@ -75,6 +75,20 @@ class PrunedFitClassifier(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         return np.zeros(len(X), dtype=int)
+
+
+class WarmupOnlyMedianPruner(MedianPruner):
+    """MedianPruner subclass whose constructor names its warm-up differently."""
+
+    def __init__(self, warmup=0):
+        super().__init__(n_warmup_steps=warmup)
+
+
+class ThresholdOnlyWilcoxonPruner(WilcoxonPruner):
+    """WilcoxonPruner subclass whose constructor names its threshold differently."""
+
+    def __init__(self, threshold=0.1):
+        super().__init__(p_threshold=threshold)
 
 
 @pytest.fixture(autouse=True)
@@ -342,6 +356,30 @@ class TestPrunedTrials:
         with pytest.raises(ValueError, match="No trials were completed"):
             search.fit(X, y)
 
+    def test_count_covers_the_whole_resumed_study(self, threshold_search, simple_classification_data):
+        """n_pruned_trials_ counts every PRUNED trial in the study, not only this fit's."""
+        X, y = simple_classification_data
+        study = optuna.create_study(direction="maximize")
+        first = threshold_search(n_trials=6)
+        first.fit(X, y, study=study)
+        after_first = first.n_pruned_trials_
+        assert after_first > 0
+
+        second = threshold_search(n_trials=6, sampler=Sampler(sampler=RandomSampler, seed=1))
+        second.fit(X, y, study=study)
+        assert len(second.trials_) == 12
+        assert second.n_pruned_trials_ == sum(t.state == TrialState.PRUNED for t in study.trials)
+        assert second.n_pruned_trials_ >= after_first
+
+    def test_passed_study_takes_both_sampler_and_pruner(self, threshold_search, simple_classification_data):
+        X, y = simple_classification_data
+        study = optuna.create_study(direction="maximize", pruner=NopPruner())
+        search = threshold_search(n_trials=4)
+        search.fit(X, y, study=study)
+        assert isinstance(study.sampler, RandomSampler)
+        assert isinstance(study.pruner, ThresholdPruner)
+        assert search.n_pruned_trials_ > 0
+
     def test_pruning_under_threads(self, threshold_search, simple_classification_data):
         X, y = simple_classification_data
         search = threshold_search(n_jobs=2, n_trials=12)
@@ -361,12 +399,20 @@ class TestPrunedTrials:
 # ---------------------------------------------------------------------------
 
 
-def _fit_recording_user_warnings(search, X, y):
+INERT = "cannot stop any trial"
+
+
+def _fit_and_collect_warnings(search, X, y, substring):
+    """Fit and return the messages of non-experimental UserWarnings containing ``substring``."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         search.fit(X, y)
     return [
-        w for w in caught if issubclass(w.category, UserWarning) and not issubclass(w.category, ExperimentalWarning)
+        str(w.message)
+        for w in caught
+        if issubclass(w.category, UserWarning)
+        and not issubclass(w.category, ExperimentalWarning)
+        and substring in str(w.message)
     ]
 
 
@@ -374,38 +420,34 @@ class TestInertPrunerWarning:
     def test_wilcoxon_with_too_few_folds(self, simple_classification_data):
         X, y = simple_classification_data
         search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, pruner=Pruner(), n_trials=2, cv=3)
-        caught = _fit_recording_user_warnings(search, X, y)
-        messages = [str(w.message) for w in caught if "cannot stop any trial" in str(w.message)]
+        messages = _fit_and_collect_warnings(search, X, y, INERT)
         assert len(messages) == 1
         assert "at least 4 folds" in messages[0]
         assert "cv yields 3" in messages[0]
         assert search.n_pruned_trials_ == 0
 
-    def test_median_warmup_covers_every_fold(self, simple_classification_data):
+    def test_wilcoxon_with_zero_threshold_never_prunes(self, simple_classification_data):
         X, y = simple_classification_data
         search = OptunaSearchCV(
-            SVC(),
-            {"C": FloatDistribution(0.1, 10.0)},
-            pruner=Pruner(pruner=MedianPruner, n_warmup_steps=5),
-            n_trials=2,
-            cv=5,
+            SVC(), {"C": FloatDistribution(0.1, 10.0)}, pruner=Pruner(p_threshold=0.0), n_trials=2, cv=10
         )
-        caught = _fit_recording_user_warnings(search, X, y)
-        messages = [str(w.message) for w in caught if "cannot stop any trial" in str(w.message)]
+        messages = _fit_and_collect_warnings(search, X, y, INERT)
         assert len(messages) == 1
-        assert "n_warmup_steps=5" in messages[0]
+        assert "never prunes" in messages[0]
 
-    def test_percentile_warmup_covers_every_fold(self, simple_classification_data):
+    @pytest.mark.parametrize(
+        ("pruner", "n_folds"),
+        [
+            pytest.param(Pruner(pruner=MedianPruner, n_warmup_steps=5), 5, id="median"),
+            pytest.param(Pruner(pruner=PercentilePruner, percentile=25.0, n_warmup_steps=3), 3, id="percentile"),
+        ],
+    )
+    def test_warmup_covers_every_fold(self, simple_classification_data, pruner, n_folds):
         X, y = simple_classification_data
-        search = OptunaSearchCV(
-            SVC(),
-            {"C": FloatDistribution(0.1, 10.0)},
-            pruner=Pruner(pruner=PercentilePruner, percentile=25.0, n_warmup_steps=3),
-            n_trials=2,
-            cv=3,
-        )
-        caught = _fit_recording_user_warnings(search, X, y)
-        assert any("cannot stop any trial" in str(w.message) for w in caught)
+        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, pruner=pruner, n_trials=2, cv=n_folds)
+        messages = _fit_and_collect_warnings(search, X, y, INERT)
+        assert len(messages) == 1
+        assert f"n_warmup_steps={pruner.params['n_warmup_steps']}" in messages[0]
 
     @pytest.mark.parametrize(
         "pruner",
@@ -413,48 +455,52 @@ class TestInertPrunerWarning:
             pytest.param(Pruner(), id="wilcoxon-five-folds"),
             pytest.param(Pruner(pruner=MedianPruner, n_warmup_steps=4), id="median-warmup-below-folds"),
             pytest.param(Pruner(pruner=NopPruner), id="unrecognised-class"),
+            pytest.param(Pruner(pruner=WarmupOnlyMedianPruner, warmup=9), id="median-subclass-own-parameters"),
+            pytest.param(
+                Pruner(pruner=ThresholdOnlyWilcoxonPruner, threshold=0.01), id="wilcoxon-subclass-own-parameters"
+            ),
         ],
     )
-    def test_no_warning_when_the_pruner_can_act(self, simple_classification_data, pruner):
+    def test_no_warning_when_the_check_cannot_tell(self, simple_classification_data, pruner):
         X, y = simple_classification_data
         search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, pruner=pruner, n_trials=2, cv=5)
-        caught = _fit_recording_user_warnings(search, X, y)
-        assert not [w for w in caught if "cannot stop any trial" in str(w.message)]
+        assert _fit_and_collect_warnings(search, X, y, INERT) == []
 
 
-class TestShufflingSplitterWarning:
+def _test_folds_seen_per_trial(search, X, y):
+    """Fit and return, per trial, the tuple of test-index sets in fold order."""
+    seen = []
+
+    def scorer(estimator, X_test, y_test):
+        seen.append(frozenset(X_test[:, 0].round(12).tolist()))
+        return estimator.score(X_test, y_test)
+
+    search.set_params(scoring=scorer)
+    search.fit(X, y)
+    n = search.n_splits_
+    return [tuple(seen[i : i + n]) for i in range(0, len(seen), n)][: len(search.trials_)]
+
+
+class TestFoldsFixedPerFit:
     @pytest.mark.parametrize(
         "cv",
         [
-            pytest.param(KFold(n_splits=5, shuffle=True), id="kfold-shuffle-unseeded"),
-            pytest.param(ShuffleSplit(n_splits=5, test_size=0.3), id="shufflesplit-unseeded"),
+            pytest.param(KFold(n_splits=4, shuffle=True), id="kfold-shuffle-unseeded"),
+            pytest.param(
+                KFold(n_splits=4, shuffle=True, random_state=np.random.RandomState(0)), id="kfold-randomstate"
+            ),
+            pytest.param(ShuffleSplit(n_splits=4, test_size=0.25), id="shufflesplit-unseeded"),
+            pytest.param(RepeatedKFold(n_splits=2, n_repeats=2), id="repeatedkfold-unseeded"),
         ],
     )
-    def test_shuffling_splitter_without_a_seed_warns(self, simple_classification_data, cv):
+    def test_every_trial_is_scored_on_the_same_folds(self, simple_classification_data, cv):
+        """Splits are computed once per fit, so fold i is the same data in every trial."""
         X, y = simple_classification_data
-        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, pruner=Pruner(), n_trials=2, cv=cv)
-        caught = _fit_recording_user_warnings(search, X, y)
-        assert sum("different folds" in str(w.message) for w in caught) == 1
-
-    @pytest.mark.parametrize(
-        "cv",
-        [
-            pytest.param(KFold(n_splits=5, shuffle=True, random_state=0), id="kfold-shuffle-seeded"),
-            pytest.param(KFold(n_splits=5), id="kfold-ordered"),
-            pytest.param(5, id="default-int"),
-        ],
-    )
-    def test_seeded_or_ordered_splitter_does_not_warn(self, simple_classification_data, cv):
-        X, y = simple_classification_data
-        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, pruner=Pruner(), n_trials=2, cv=cv)
-        caught = _fit_recording_user_warnings(search, X, y)
-        assert not [w for w in caught if "different folds" in str(w.message)]
-
-    def test_no_shuffle_warning_without_a_pruner(self, simple_classification_data):
-        X, y = simple_classification_data
-        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, n_trials=2, cv=KFold(5, shuffle=True))
-        caught = _fit_recording_user_warnings(search, X, y)
-        assert not [w for w in caught if "different folds" in str(w.message)]
+        search = OptunaSearchCV(SVC(), {"C": FloatDistribution(0.1, 10.0)}, n_trials=3, cv=cv)
+        folds = _test_folds_seen_per_trial(search, X, y)
+        assert len(folds) == 3
+        assert len(set(folds)) == 1, "trials were scored on different folds"
+        assert len(set(folds[0])) == 4, "the folds within one trial should differ"
 
 
 # ---------------------------------------------------------------------------

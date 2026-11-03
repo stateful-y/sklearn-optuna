@@ -558,11 +558,13 @@ class TestOptunaSearchCVCore:
         )
 
         search.fit(X, y)
-        captured = capsys.readouterr()
+        out = capsys.readouterr().out
+        assert "[Trial 0] Fitting 2 folds for parameters {'C':" in out
+        assert out.count("Fitting 2 folds") == 3
 
-        # With verbose=1, should see some output
-        # (The exact output format depends on sklearn version)
-        assert len(captured.out) > 0 or len(captured.err) > 0
+        quiet = OptunaSearchCV(SVC(), param_distributions, n_trials=2, cv=2, verbose=0)
+        quiet.fit(X, y)
+        assert "Fitting" not in capsys.readouterr().out
 
     def test_scoring_string(self, simple_classification_data):
         """Test with scoring parameter as string."""

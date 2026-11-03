@@ -1,5 +1,6 @@
 """Optuna-powered hyperparameter search for scikit-learn."""
 
+import math
 import warnings
 from numbers import Integral, Real
 
@@ -7,7 +8,7 @@ import numpy as np
 import optuna
 from optuna.distributions import BaseDistribution
 from sklearn.base import clone, is_classifier
-from sklearn.model_selection import GroupShuffleSplit, ShuffleSplit, StratifiedShuffleSplit, check_cv
+from sklearn.model_selection import check_cv
 from sklearn.model_selection._search import BaseSearchCV
 from sklearn.utils import indexable
 from sklearn.utils._param_validation import Interval
@@ -378,10 +379,13 @@ class OptunaSearchCV(BaseSearchCV):
         routed_params = self._get_routed_params_for_fit(params)
         fit_params = routed_params.estimator.fit
 
-        # Resolve the splitter once; the objective splits per trial with the
-        # routed split parameters (groups), as BaseSearchCV does.
+        # Split once per fit, with the routed split parameters (groups), as
+        # BaseSearchCV does: every trial is scored on the same folds, which is
+        # what lets a pruner compare fold i of one trial with fold i of another
+        # even when the splitter shuffles without a fixed seed.
         cv_orig = check_cv(self.cv, y, classifier=is_classifier(estimator))
-        self.n_splits_ = cv_orig.get_n_splits(X, y, **routed_params.splitter.split)
+        splits = list(cv_orig.split(X, y, **routed_params.splitter.split))
+        self.n_splits_ = len(splits)
 
         # Validate and instantiate the pruner. fit() runs no parameter
         # validation, so this is an explicit check like the one for callbacks.
@@ -389,9 +393,9 @@ class OptunaSearchCV(BaseSearchCV):
         if self.pruner is not None:
             if not isinstance(self.pruner, Pruner):
                 raise TypeError(f"pruner must be a Pruner instance or None, got {type(self.pruner)}")
-            _warn_if_pruner_inert(self.pruner, self.n_splits_)
-            _warn_if_splits_vary(cv_orig)
+            # Instantiate first so Optuna rejects invalid settings before the check reads them.
             pruner_instance = self.pruner.instantiate().instance_
+            _warn_if_pruner_inert(self.pruner, self.n_splits_)
 
         # Store the study if provided, otherwise clear previous study
         if study is not None:
@@ -442,7 +446,7 @@ class OptunaSearchCV(BaseSearchCV):
             param_distributions=self.param_distributions,
             X=X,
             y=y,
-            cv=cv_orig,
+            splits=splits,
             scorers=scorers,
             routed_params=routed_params,
             verbose=self.verbose,
@@ -509,17 +513,16 @@ class OptunaSearchCV(BaseSearchCV):
         return self
 
 
-def _wilcoxon_min_folds(p_threshold: float, n_startup_steps: int) -> int:
+def _wilcoxon_min_folds(p_threshold: float, n_startup_steps: int) -> float:
     """Smallest fold count at which Optuna's Wilcoxon pruner can act.
 
     With n paired folds all favouring the best trial, the one-sided exact
-    p-value is 2**-n, and the pruner also waits for ``max(2, n_startup_steps)``
-    pairs. A fold count below the result can never stop a trial.
+    p-value is 2**-n, so the pruner needs the smallest n with 2**-n below
+    ``p_threshold``, and it also waits for ``max(2, n_startup_steps)`` pairs.
+    A ``p_threshold`` of 0 can never be met, which returns infinity.
     """
-    n = 1
-    while 2.0**-n >= p_threshold and n < 64:
-        n += 1
-    return max(2, int(n_startup_steps), n)
+    n = math.floor(-math.log2(p_threshold)) + 1 if p_threshold > 0 else math.inf
+    return max(2, n_startup_steps, n)
 
 
 def _warn_if_pruner_inert(pruner: Pruner, n_splits: int) -> None:
@@ -527,26 +530,31 @@ def _warn_if_pruner_inert(pruner: Pruner, n_splits: int) -> None:
 
     Reads the wrapper's parameters (sklearn-wrap stores the constructor
     defaults there) rather than the pruner instance, whose settings are
-    private. Pruner classes the check does not know are left alone.
+    private. Pruner classes the check does not know, and subclasses whose
+    constructor does not take the parameters it reads, are left alone.
     """
     pruner_class = pruner.estimator_class
     params = pruner.params
 
-    if pruner_class is optuna.pruners.WilcoxonPruner:
-        needed = _wilcoxon_min_folds(float(params["p_threshold"]), int(params["n_startup_steps"]))
+    if issubclass(pruner_class, optuna.pruners.WilcoxonPruner):
+        p_threshold, n_startup_steps = params.get("p_threshold"), params.get("n_startup_steps")
+        if p_threshold is None or n_startup_steps is None:
+            return
+        needed = _wilcoxon_min_folds(float(p_threshold), int(n_startup_steps))
         if n_splits < needed:
+            requirement = "never prunes" if math.isinf(needed) else f"needs at least {needed} folds"
             warnings.warn(
                 f"The pruner cannot stop any trial: WilcoxonPruner with p_threshold="
-                f"{params['p_threshold']} and n_startup_steps={params['n_startup_steps']} needs "
-                f"at least {needed} folds, but cv yields {n_splits}. Every trial will run "
-                f"all its folds. Increase cv, raise p_threshold, or choose another pruner.",
+                f"{p_threshold} and n_startup_steps={n_startup_steps} {requirement}, but cv "
+                f"yields {n_splits}. Every trial will run all its folds. Increase cv, raise "
+                f"p_threshold, or choose another pruner.",
                 UserWarning,
                 stacklevel=3,
             )
     elif issubclass(pruner_class, optuna.pruners.PercentilePruner):
         # MedianPruner subclasses PercentilePruner; both skip steps below the warm-up.
-        n_warmup_steps = int(params["n_warmup_steps"])
-        if n_warmup_steps >= n_splits:
+        n_warmup_steps = params.get("n_warmup_steps")
+        if n_warmup_steps is not None and int(n_warmup_steps) >= n_splits:
             warnings.warn(
                 f"The pruner cannot stop any trial: {pruner_class.__name__} with "
                 f"n_warmup_steps={n_warmup_steps} skips every fold when cv yields only "
@@ -555,23 +563,3 @@ def _warn_if_pruner_inert(pruner: Pruner, n_splits: int) -> None:
                 UserWarning,
                 stacklevel=3,
             )
-
-
-def _warn_if_splits_vary(cv) -> None:
-    """Warn when a shuffling splitter without a fixed seed makes folds differ between trials.
-
-    Pruning compares fold ``i`` of the current trial with fold ``i`` of
-    earlier trials, which only means something when fold ``i`` is the same
-    data every time. A custom iterable of splits cannot be inspected.
-    """
-    shuffles = isinstance(cv, ShuffleSplit | StratifiedShuffleSplit | GroupShuffleSplit) or bool(
-        getattr(cv, "shuffle", False)
-    )
-    if shuffles and getattr(cv, "random_state", None) is None:
-        warnings.warn(
-            f"cv={cv!r} shuffles without a fixed random_state, so each trial is scored on "
-            f"different folds and the pruner compares scores that do not belong to the same "
-            f"data. Set random_state on the splitter, or use a non-shuffling one.",
-            UserWarning,
-            stacklevel=3,
-        )

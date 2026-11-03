@@ -3,7 +3,7 @@
 import optuna
 import pytest
 from optuna.exceptions import ExperimentalWarning
-from optuna.pruners import BasePruner, MedianPruner, NopPruner, WilcoxonPruner
+from optuna.pruners import BasePruner, MedianPruner, WilcoxonPruner
 from optuna.samplers import (
     BaseSampler,
     CmaEsSampler,
@@ -633,21 +633,15 @@ class TestPruner:
         assert pruner.estimator_base_class == BasePruner
 
     def test_pruner_default_is_wilcoxon(self):
-        """A Pruner with no class instantiates a WilcoxonPruner with Optuna's defaults."""
+        """A Pruner with no class instantiates a WilcoxonPruner with Optuna's defaults, warning as Optuna does."""
         pruner = Pruner()
         assert pruner.estimator_class == WilcoxonPruner
-        with pytest.warns(ExperimentalWarning):
+        with pytest.warns(ExperimentalWarning, match="WilcoxonPruner"):
             instance = pruner.instantiate().instance_
-        assert isinstance(instance, WilcoxonPruner)
-        with pytest.warns(ExperimentalWarning):
             reference = WilcoxonPruner()
+        assert isinstance(instance, WilcoxonPruner)
         assert instance._p_threshold == reference._p_threshold
         assert instance._n_startup_steps == reference._n_startup_steps
-
-    def test_pruner_default_instantiation_warns_experimental(self):
-        """Optuna marks WilcoxonPruner experimental; the warning is visible through the wrapper."""
-        with pytest.warns(ExperimentalWarning, match="WilcoxonPruner"):
-            Pruner().instantiate()
 
     def test_pruner_custom_class_with_params(self):
         """A median pruner receives the warm-up passed through the wrapper."""
@@ -683,9 +677,3 @@ class TestPruner:
         """An unknown constructor parameter is rejected."""
         with pytest.raises(ValueError, match="not a valid parameter"):
             Pruner(pruner=MedianPruner, invalid_param=1)
-
-    def test_pruner_in_optuna_study(self):
-        """The instantiated pruner can be attached to a study."""
-        pruner = Pruner(pruner=NopPruner)
-        study = optuna.create_study(pruner=pruner.instantiate().instance_)
-        assert isinstance(study.pruner, NopPruner)
