@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.1.0-alpha.6] - 2026-11-03
+
+This **minor release** includes 11 commits.
+
+
+### Features
+- Add a `pruner` option that stops unpromising trials early (needs optuna>=3.6)  ([#194](https://github.com/stateful-y/sklearn-optuna/pull/194)) by @gtauzin
+
+### Bug Fixes
+- Fix issue-chooser links and add private vulnerability reporting (template v0.44.1)  ([#169](https://github.com/stateful-y/sklearn-optuna/pull/169)) by @gtauzin
+- Stop dependency auto-merge when main requires no status checks (template v0.45.1)  ([#179](https://github.com/stateful-y/sklearn-optuna/pull/179)) by @gtauzin
+- Fix auto-merged dependency PRs stalling the merge queue (template v0.45.2)  ([#183](https://github.com/stateful-y/sklearn-optuna/pull/183)) by @gtauzin
+- Pin ty and the Python version of every nox session (template v0.45.3, v0.45.4)  ([#191](https://github.com/stateful-y/sklearn-optuna/pull/191)) by @gtauzin
+
+### Documentation
+- Add citation metadata and a page on how to cite sklearn-optuna (template v0.43.0)  ([#76](https://github.com/stateful-y/sklearn-optuna/pull/76)) by @gtauzin
+
+### Miscellaneous Tasks
+- Allow publish retries and auto-merge safe dependency updates (template v0.42.0)  ([#75](https://github.com/stateful-y/sklearn-optuna/pull/75)) by @gtauzin
+- Keep approved dependency updates from stalling behind main (template v0.44.0)  ([#84](https://github.com/stateful-y/sklearn-optuna/pull/84)) by @gtauzin
+- Pin Python 3.14 in the lint and commit-message jobs, which failed on 3.15  ([#168](https://github.com/stateful-y/sklearn-optuna/pull/168)) by @gtauzin
+
+### Security
+- Verify the release tag's signature before building the changelog (template v0.42.0)  ([#75](https://github.com/stateful-y/sklearn-optuna/pull/75)) by @gtauzin
+- Upgrade click and urllib3 to versions without known security advisories  ([#149](https://github.com/stateful-y/sklearn-optuna/pull/149)) by @gtauzin
+- Sign GitHub Release files and the SBOM with Sigstore (template v0.45.0)  ([#172](https://github.com/stateful-y/sklearn-optuna/pull/172)) by @gtauzin
+
+### Contributors
+
+Thanks to all contributors for this release:
+- @gtauzin
+
 ## [0.1.0-alpha.5] - 2026-08-12
 
 This **minor release** includes 24 commits.
