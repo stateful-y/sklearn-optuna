@@ -48,7 +48,14 @@ lint = [
     "interrogate>=1.7.0",
     "ruff>=0.8.0",
     "rumdl>=0.1.33",
-    "ty>=0.0.12",
+    # Pinned exactly, unlike the rest of this group. ty is pre-1.0 and its patch
+    # releases add checks: 0.0.92 introduced `invalid-attribute-override` and turned
+    # the automerged weekly lockfile refresh red in two repos, because a `>=` floor
+    # let that refresh move ty along with everything else. Pinned, it moves only in
+    # the `lint-tools` Renovate PR, where any code the new checks need can land with
+    # it. The annotation lets Renovate bump this template seed too.
+    # renovate: datasource=pypi depName=ty
+    "ty==0.0.96",
 ]
 docs = [
     # Griffe is imported directly by docs_build/_api_pages.py to discover the package's
@@ -196,6 +203,7 @@ ignore = [
     "B008",   # do not perform function calls in argument defaults
     "PLC0415", # import not at top-level (lazy imports are intentional, e.g. docs hooks)
     "PLR0913", # too many args in func def
+    "PLR0917", # too many positional args (made stable in ruff 0.17; same reasoning as PLR0913)
     "PLR0915", # too many statements
     "PLR0912", # too many branches
     "PLR2004", # magic value used in comparison
