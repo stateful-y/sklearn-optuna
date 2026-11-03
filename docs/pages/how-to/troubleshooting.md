@@ -11,7 +11,7 @@ Solutions to common problems when using Sklearn-Optuna.
 : Make sure you installed in the active environment: `python -c "import sklearn_optuna"`.
 
 **Problem: Optuna version conflict**
-: Sklearn-Optuna requires Optuna 3.5-3.x. If you have Optuna 4.x installed, downgrade with `pip install "optuna>=3.5,<4"`.
+: Sklearn-Optuna requires Optuna 3.6 or later. If an older version is installed, upgrade with `pip install "optuna>=3.6"`.
 
 ## Search Issues
 

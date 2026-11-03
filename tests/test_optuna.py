@@ -2,6 +2,8 @@
 
 import optuna
 import pytest
+from optuna.exceptions import ExperimentalWarning
+from optuna.pruners import BasePruner, MedianPruner, WilcoxonPruner
 from optuna.samplers import (
     BaseSampler,
     CmaEsSampler,
@@ -20,7 +22,7 @@ from sklearn.base import BaseEstimator
 from sklearn_wrap import BaseClassWrapper
 from sklearn_wrap.base import REQUIRED_PARAM_VALUE
 
-from sklearn_optuna.optuna import Callback, Sampler, Storage
+from sklearn_optuna.optuna import Callback, Pruner, Sampler, Storage
 
 
 # Tests for Sampler class
@@ -617,3 +619,61 @@ class TestCallback:
         # Should create new instances each time
         assert first_instance is not second_instance
         assert isinstance(first_instance, type(second_instance))
+
+
+class TestPruner:
+    """Tests for the Pruner wrapper class."""
+
+    def test_pruner_inherits_base_wrapper(self):
+        """Pruner is a BaseClassWrapper and a scikit-learn estimator."""
+        pruner = Pruner()
+        assert isinstance(pruner, BaseClassWrapper)
+        assert isinstance(pruner, BaseEstimator)
+        assert pruner.estimator_name == "pruner"
+        assert pruner.estimator_base_class == BasePruner
+
+    def test_pruner_default_is_wilcoxon(self):
+        """A Pruner with no class instantiates a WilcoxonPruner with Optuna's defaults, warning as Optuna does."""
+        pruner = Pruner()
+        assert pruner.estimator_class == WilcoxonPruner
+        with pytest.warns(ExperimentalWarning, match="WilcoxonPruner"):
+            instance = pruner.instantiate().instance_
+            reference = WilcoxonPruner()
+        assert isinstance(instance, WilcoxonPruner)
+        assert instance._p_threshold == reference._p_threshold
+        assert instance._n_startup_steps == reference._n_startup_steps
+
+    def test_pruner_custom_class_with_params(self):
+        """A median pruner receives the warm-up passed through the wrapper."""
+        pruner = Pruner(pruner=MedianPruner, n_warmup_steps=2)
+        instance = pruner.instantiate().instance_
+        assert isinstance(instance, MedianPruner)
+        assert instance._n_warmup_steps == 2
+
+    def test_pruner_survives_clone(self):
+        """clone() keeps the class and parameters and yields an equivalent pruner."""
+        from sklearn.base import clone
+
+        pruner = Pruner(pruner=MedianPruner, n_warmup_steps=3, n_startup_trials=2)
+        cloned = clone(pruner)
+        assert cloned is not pruner
+        assert cloned.get_params() == pruner.get_params()
+        instance = cloned.instantiate().instance_
+        assert isinstance(instance, MedianPruner)
+        assert instance._n_warmup_steps == 3
+        assert instance._n_startup_trials == 2
+
+    def test_pruner_invalid_pruner_class(self):
+        """A class outside optuna.pruners.BasePruner is rejected at construction."""
+
+        class NotAPruner:
+            def __init__(self):
+                pass
+
+        with pytest.raises(ValueError, match="Invalid pruner class.*Valid estimator class should be derived from"):
+            Pruner(pruner=NotAPruner)
+
+    def test_pruner_invalid_parameter(self):
+        """An unknown constructor parameter is rejected."""
+        with pytest.raises(ValueError, match="not a valid parameter"):
+            Pruner(pruner=MedianPruner, invalid_param=1)

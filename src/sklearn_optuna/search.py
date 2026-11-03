@@ -1,17 +1,20 @@
 """Optuna-powered hyperparameter search for scikit-learn."""
 
+import math
+import warnings
 from numbers import Integral, Real
 
 import numpy as np
 import optuna
 from optuna.distributions import BaseDistribution
-from sklearn.base import clone
+from sklearn.base import clone, is_classifier
+from sklearn.model_selection import check_cv
 from sklearn.model_selection._search import BaseSearchCV
 from sklearn.utils import indexable
 from sklearn.utils._param_validation import Interval
 
 from sklearn_optuna.objective import _Objective
-from sklearn_optuna.optuna import Callback, Sampler, Storage
+from sklearn_optuna.optuna import Callback, Pruner, Sampler, Storage
 from sklearn_optuna.utils import _build_cv_results
 
 
@@ -67,6 +70,17 @@ class OptunaSearchCV(BaseSearchCV):
     callbacks : dict of str to Callback, default=None
         Dictionary mapping callback names to Callback instances. Each callback
         is invoked at the end of each trial with the study and trial objects.
+
+    pruner : Pruner, default=None
+        A wrapped Optuna pruner. Each fold's test score is reported to the
+        trial as an intermediate value whether or not a pruner is set. When a
+        pruner is given, it is consulted after each fold and a trial it judges
+        reliably worse than the best trial so far is stopped before its
+        remaining folds run; such a trial ends in Optuna's PRUNED state, keeps
+        the per-fold scores of the folds that ran, and is left out of
+        ``cv_results_``. If None, no trial is ever stopped by the search. When
+        an existing study is passed to ``fit()``, a given pruner replaces that
+        study's pruner, as ``sampler`` does.
 
     n_trials : int, default=10
         Number of trials for hyperparameter search. Each trial evaluates one
@@ -223,7 +237,12 @@ class OptunaSearchCV(BaseSearchCV):
         The Optuna study object containing all trials and optimization history.
 
     trials_ : list of optuna.trial.FrozenTrial
-        The list of all trials executed during the search.
+        The list of all trials executed during the search, including pruned
+        ones. Only trials in the COMPLETE state appear in ``cv_results_``.
+
+    n_pruned_trials_ : int
+        Number of trials in the study that ended in the PRUNED state. Always
+        0 when ``pruner`` is None.
 
     n_features_in_ : int
         Number of features seen during [fit](https://scikit-learn.org/stable/glossary.html#term-fit).
@@ -260,6 +279,7 @@ class OptunaSearchCV(BaseSearchCV):
     sklearn_optuna.optuna.Sampler : Wrapper for Optuna samplers.
     sklearn_optuna.optuna.Storage : Wrapper for Optuna storage backends.
     sklearn_optuna.optuna.Callback : Wrapper for Optuna callbacks.
+    sklearn_optuna.optuna.Pruner : Wrapper for Optuna pruners.
 
     References
     ----------
@@ -273,6 +293,7 @@ class OptunaSearchCV(BaseSearchCV):
         "sampler": [Sampler, None],
         "storage": [Storage, None],
         "callbacks": [dict, None],
+        "pruner": [Pruner, None],
     }
 
     def __init__(
@@ -284,6 +305,7 @@ class OptunaSearchCV(BaseSearchCV):
         sampler=None,
         storage=None,
         callbacks=None,
+        pruner=None,
         n_trials=10,
         timeout=None,
         n_jobs=None,
@@ -309,6 +331,7 @@ class OptunaSearchCV(BaseSearchCV):
         self.storage = storage
         self.timeout = timeout
         self.callbacks = callbacks
+        self.pruner = pruner
 
     def fit(self, X, y=None, *, study=None, **params):
         """Run fit with all sets of parameters.
@@ -354,11 +377,25 @@ class OptunaSearchCV(BaseSearchCV):
 
         # Handle metadata routing
         routed_params = self._get_routed_params_for_fit(params)
+        fit_params = routed_params.estimator.fit
 
-        fit_params = params
-        groups = params.get("groups")
-        if "estimator" in routed_params and "fit" in routed_params["estimator"]:
-            fit_params = routed_params["estimator"]["fit"]
+        # Split once per fit, with the routed split parameters (groups), as
+        # BaseSearchCV does: every trial is scored on the same folds, which is
+        # what lets a pruner compare fold i of one trial with fold i of another
+        # even when the splitter shuffles without a fixed seed.
+        cv_orig = check_cv(self.cv, y, classifier=is_classifier(estimator))
+        splits = list(cv_orig.split(X, y, **routed_params.splitter.split))
+        self.n_splits_ = len(splits)
+
+        # Validate and instantiate the pruner. fit() runs no parameter
+        # validation, so this is an explicit check like the one for callbacks.
+        pruner_instance = None
+        if self.pruner is not None:
+            if not isinstance(self.pruner, Pruner):
+                raise TypeError(f"pruner must be a Pruner instance or None, got {type(self.pruner)}")
+            # Instantiate first so Optuna rejects invalid settings before the check reads them.
+            pruner_instance = self.pruner.instantiate().instance_
+            _warn_if_pruner_inert(self.pruner, self.n_splits_)
 
         # Store the study if provided, otherwise clear previous study
         if study is not None:
@@ -394,11 +431,14 @@ class OptunaSearchCV(BaseSearchCV):
                 direction="maximize",
                 sampler=sampler_instance,
                 storage=storage_instance,
+                pruner=pruner_instance,
             )
         else:
             study = self.study_
             if sampler_instance is not None:
                 study.sampler = sampler_instance
+            if pruner_instance is not None:
+                study.pruner = pruner_instance
 
         # Create objective function
         objective = _Objective(
@@ -406,15 +446,15 @@ class OptunaSearchCV(BaseSearchCV):
             param_distributions=self.param_distributions,
             X=X,
             y=y,
-            cv=self.cv,
+            splits=splits,
             scorers=scorers,
-            fit_params=fit_params,
-            groups=groups,
+            routed_params=routed_params,
             verbose=self.verbose,
             return_train_score=self.return_train_score,
             error_score=self.error_score,
             multimetric=self.multimetric_,
             refit=self.refit,
+            prune=pruner_instance is not None,
         )
 
         # Run optimization
@@ -429,6 +469,7 @@ class OptunaSearchCV(BaseSearchCV):
         # Store study and trials
         self.study_ = study
         self.trials_ = study.trials
+        self.n_pruned_trials_ = sum(t.state == optuna.trial.TrialState.PRUNED for t in self.trials_)
 
         # Build cv_results_ attribute from trials
         self.cv_results_ = _build_cv_results(self.trials_, self.multimetric_, self.return_train_score)
@@ -470,3 +511,55 @@ class OptunaSearchCV(BaseSearchCV):
                     self.best_estimator_.fit(X, y, **fit_params)
 
         return self
+
+
+def _wilcoxon_min_folds(p_threshold: float, n_startup_steps: int) -> float:
+    """Smallest fold count at which Optuna's Wilcoxon pruner can act.
+
+    With n paired folds all favouring the best trial, the one-sided exact
+    p-value is 2**-n, so the pruner needs the smallest n with 2**-n below
+    ``p_threshold``, and it also waits for ``max(2, n_startup_steps)`` pairs.
+    A ``p_threshold`` of 0 can never be met, which returns infinity.
+    """
+    n = math.floor(-math.log2(p_threshold)) + 1 if p_threshold > 0 else math.inf
+    return max(2, n_startup_steps, n)
+
+
+def _warn_if_pruner_inert(pruner: Pruner, n_splits: int) -> None:
+    """Warn when the configured pruner can never stop a trial with ``n_splits`` folds.
+
+    Reads the wrapper's parameters (sklearn-wrap stores the constructor
+    defaults there) rather than the pruner instance, whose settings are
+    private. Pruner classes the check does not know, and subclasses whose
+    constructor does not take the parameters it reads, are left alone.
+    """
+    pruner_class = pruner.estimator_class
+    params = pruner.params
+
+    if issubclass(pruner_class, optuna.pruners.WilcoxonPruner):
+        p_threshold, n_startup_steps = params.get("p_threshold"), params.get("n_startup_steps")
+        if p_threshold is None or n_startup_steps is None:
+            return
+        needed = _wilcoxon_min_folds(float(p_threshold), int(n_startup_steps))
+        if n_splits < needed:
+            requirement = "never prunes" if math.isinf(needed) else f"needs at least {needed} folds"
+            warnings.warn(
+                f"The pruner cannot stop any trial: WilcoxonPruner with p_threshold="
+                f"{p_threshold} and n_startup_steps={n_startup_steps} {requirement}, but cv "
+                f"yields {n_splits}. Every trial will run all its folds. Increase cv, raise "
+                f"p_threshold, or choose another pruner.",
+                UserWarning,
+                stacklevel=3,
+            )
+    elif issubclass(pruner_class, optuna.pruners.PercentilePruner):
+        # MedianPruner subclasses PercentilePruner; both skip steps below the warm-up.
+        n_warmup_steps = params.get("n_warmup_steps")
+        if n_warmup_steps is not None and int(n_warmup_steps) >= n_splits:
+            warnings.warn(
+                f"The pruner cannot stop any trial: {pruner_class.__name__} with "
+                f"n_warmup_steps={n_warmup_steps} skips every fold when cv yields only "
+                f"{n_splits}. Every trial will run all its folds. Lower n_warmup_steps or "
+                f"increase cv.",
+                UserWarning,
+                stacklevel=3,
+            )

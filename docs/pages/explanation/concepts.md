@@ -42,11 +42,17 @@ parameters through, or nest Optuna objects in pipelines.
 2. **Trial loop**: The study's `optimize()` method calls an internal
    `_Objective` instance for each trial. The objective asks Optuna to suggest
    parameter values from the distributions you provided, clones the estimator
-   with those values, and runs `cross_validate()`.
+   with those values, and fits and scores each cross-validation fold in turn,
+   using the same per-fold routine Scikit-Learn's own searches use.
 
-3. **Score storage**: Per-fold scores are stored as trial user attributes
-   (`mean_test_score`, `split0_test_score`, etc.), making them available
-   through both Optuna's trial API and Scikit-Learn's `cv_results_` dict.
+3. **Score storage**: As each fold finishes, its scores and timings are stored
+   as trial user attributes (`split0_test_score`, `split0_fit_time`, etc.) and
+   its test score is reported to the trial as an intermediate value. The means
+   (`mean_test_score`, `mean_fit_time`, etc.) are stored once every fold has
+   run. Everything is available through Optuna's trial API; the per-fold
+   scores, the means, and the timing means and standard deviations also
+   appear in Scikit-Learn's `cv_results_` dict, while the per-fold timings
+   stay on the trial.
 
 4. **Result assembly**: After optimization completes, `_build_cv_results()`
    transforms the list of `FrozenTrial` objects into Scikit-Learn's standard
@@ -62,11 +68,12 @@ routing, and serialization.
 
 ## Wrapper Classes
 
-Optuna's samplers, storage backends, and callbacks are plain Python objects.
-They do not implement `get_params()` or `set_params()`, which means Scikit-Learn
-cannot clone them, serialize them, or route parameters through them.
+Optuna's samplers, storage backends, pruners, and callbacks are plain Python
+objects. They do not implement `get_params()` or `set_params()`, which means
+Scikit-Learn cannot clone them, serialize them, or route parameters through
+them.
 
-The `Sampler`, `Storage`, and `Callback` wrappers solve this using
+The `Sampler`, `Storage`, `Pruner`, and `Callback` wrappers solve this using
 [Sklearn-Wrap](https://github.com/stateful-y/sklearn-wrap)'s `BaseClassWrapper`,
 which stores the **class** and its **constructor arguments** separately:
 
@@ -113,9 +120,10 @@ For pipeline sub-estimators, use `__` (double underscore) syntax:
 Trials run concurrently using threading, which works well with Optuna's
 thread-safe study implementation.
 
-Within each trial, `cross_validate` runs with `n_jobs=1` to avoid nested
-parallelism. This is a deliberate trade-off: nested parallel workers (trials x
-CV folds) compete for CPU resources and often slow things down due to overhead.
+Within each trial, the folds run one after another. This is a deliberate
+trade-off: nested parallel workers (trials x CV folds) compete for CPU
+resources and often slow things down due to overhead, and running folds in
+sequence is what lets a trial be stopped between folds.
 
 For CPU-bound workloads, this means the effective parallelism is at the trial
 level, not the fold level.
@@ -131,10 +139,39 @@ setup and Optuna's
 [distributed optimization guide](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html#multi-node-optimization)
 for the full pattern.
 
+## Pruning
+
+Every trial reports each fold's test score to Optuna as an intermediate value
+at step `i` for fold `i`. That record exists whether or not you ask for
+pruning: it is what `optuna.visualization.plot_intermediate_values` draws, and
+it is what a pruner reads.
+
+When you pass a `Pruner`, the objective asks it after every fold whether the
+trial should stop. The default wrapped pruner is Optuna's `WilcoxonPruner`,
+which runs a paired statistical test between this trial's fold scores and the
+best trial's scores on the same folds. Pairing fold `i` with fold `i` is only
+meaningful when fold `i` is the same data in every trial, which is why `fit()`
+splits the data once and scores every trial on those folds, whatever the
+splitter. The test needs several pairs before it
+can be confident: at its default threshold it cannot stop a trial before the
+fourth fold, so a three-fold search never prunes.
+
+A stopped trial ends in Optuna's `PRUNED` state. It keeps its parameters and
+the per-fold attributes of the folds that ran, but has no mean score, and it
+is left out of `cv_results_` so that every row of that table remains a full
+evaluation. `trials_` and `study_` still hold it, and `n_pruned_trials_`
+counts them. A fold whose fit failed under `error_score=np.nan` is not
+reported at all: a failed fold is not a measurement, and reporting NaN would
+make the pruners disagree about what it means.
+
+See [How to Prune Unpromising Trials](../how-to/prune-trials.md) for the
+procedure.
+
 ## Limitations
 
-- **No pruning**: Optuna's pruning API (early stopping of unpromising trials)
-  is not wired into `OptunaSearchCV`. All trials run full cross-validation.
+- **Pruning between folds only**: a trial can be stopped after a fold, not in
+  the middle of a fit. Stopping a boosting model after some of its rounds, or
+  an iterative model after some epochs, is not supported.
 
 - **Single-objective only**: `OptunaSearchCV` creates a single-objective study
   (`direction="maximize"`). Multi-objective Pareto optimization requires using

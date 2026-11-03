@@ -34,11 +34,12 @@ def _build_cv_results(
 
     Notes
     -----
-    This function filters for completed trials only and expects
-    trial user attributes to be formatted as:
+    This function filters for completed trials only (pruned and failed
+    trials are left out) and expects trial user attributes to be formatted as:
     - 'param_{name}' for parameter values
     - 'mean_test_{metric}' and 'split{i}_test_{metric}' for test scores
     - 'mean_train_{metric}' and 'split{i}_train_{metric}' for train scores
+    - 'mean_fit_time', 'std_fit_time', 'mean_score_time', 'std_score_time'
     """
     # Filter completed trials
     completed_trials = [t for t in trials if t.state == optuna.trial.TrialState.COMPLETE]
@@ -94,11 +95,16 @@ def _initialize_result_arrays(
             results[f"mean_train{suffix}"] = np.full(n_trials, np.nan)
             results[f"std_train{suffix}"] = np.full(n_trials, np.nan)
 
-    # Split arrays
+    # Timing arrays
+    for key in ("mean_fit_time", "std_fit_time", "mean_score_time", "std_score_time"):
+        results[key] = np.full(n_trials, np.nan)
+
+    # Split score arrays. Per-fold timings are also stored as split attributes
+    # (for pruned-trial diagnostics) but are not cv_results_ columns.
     split_keys = set()
     for trial in completed_trials:
         for key in trial.user_attrs:
-            if key.startswith("split"):
+            if key.startswith("split") and ("_test_" in key or "_train_" in key):
                 split_keys.add(key)
 
     for key in split_keys:

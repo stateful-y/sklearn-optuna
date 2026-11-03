@@ -315,8 +315,8 @@ class TestOptunaSearchCVEdgeCases:
             cv=2,
         )
 
-        with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-            mock_cv.side_effect = ValueError("boom")
+        with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+            mock_fold.side_effect = ValueError("boom")
             search.fit(X, y)
 
         assert len(search.trials_) == 1
@@ -324,8 +324,8 @@ class TestOptunaSearchCVEdgeCases:
         assert trial.value == 0.0
         assert trial.user_attrs.get("exception") == "boom"
         assert trial.user_attrs.get("exception_type") == "ValueError"
-        # mean_test_score is not set if cross_validate fails completely
-        # assert trial.user_attrs.get("mean_test_score") == 0.0
+        # mean_test_score is not set when the fold loop fails outright
+        assert "mean_test_score" not in trial.user_attrs
 
 
 # --- Additional Edge Cases moved from temporary coverage file ---
@@ -348,6 +348,18 @@ def mock_data():
     return make_classification(n_samples=20, random_state=42)
 
 
+def _fold(test_scores, train_scores=None):
+    """Build one fold's result as ``_fit_and_score`` returns it.
+
+    The objective now drives folds itself, so tests that used to stub the
+    aggregated ``cross_validate`` dict stub one fold at a time instead.
+    """
+    result = {"fit_error": None, "fit_time": 0.0, "score_time": 0.0, "test_scores": test_scores}
+    if train_scores is not None:
+        result["train_scores"] = train_scores
+    return result
+
+
 def test_no_trials_completed_explicit(mock_data):
     """Force no trials completed error."""
     X, y = mock_data
@@ -364,8 +376,8 @@ def test_single_metric_valid_return(mock_data):
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2)
 
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        mock_cv.return_value = {"test_score": np.array([0.8, 0.8])}
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        mock_fold.return_value = _fold(0.8)
         search.fit(X, y)
     assert search.best_score_ == 0.8
 
@@ -376,8 +388,8 @@ def test_multimetric_nan_optimization_metric(mock_data):
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2, scoring={"acc": "accuracy"}, refit="acc")
 
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        mock_cv.return_value = {"test_acc": np.array([np.nan, np.nan]), "train_acc": np.array([0.5, 0.5])}
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        mock_fold.return_value = _fold({"acc": np.nan})
         search.fit(X, y)
     assert search.trials_[0].value == float("-inf")
 
@@ -399,8 +411,8 @@ def test_nan_score_single_metric(mock_data):
     X, y = mock_data
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2, error_score=np.nan)
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        mock_cv.return_value = {"test_score": np.array([np.nan, np.nan])}
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        mock_fold.return_value = _fold(np.nan)
         search.fit(X, y)
     assert search.trials_[0].value == float("-inf")
 
@@ -438,16 +450,16 @@ def test_mixed_success_failure_trials(mock_data):
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=2, cv=2, error_score=-999.0, return_train_score=True)
 
-    success_result = {"test_score": np.array([0.8, 0.8]), "train_score": np.array([0.9, 0.9])}
     calls = [0]
 
     def side_effect(*args, **kwargs):
+        # Two folds per trial: the first trial's folds succeed, the second trial's fail.
         calls[0] += 1
-        if calls[0] == 1:
-            return success_result
+        if calls[0] <= 2:
+            return _fold(0.8, 0.9)
         raise ValueError("Simulated failure")
 
-    with patch("sklearn_optuna.objective.cross_validate", side_effect=side_effect):
+    with patch("sklearn_optuna.objective._fit_and_score", side_effect=side_effect):
         search.fit(X, y)
 
     completed = [t for t in search.trials_ if t.state == optuna.trial.TrialState.COMPLETE]
@@ -473,8 +485,8 @@ def test_multimetric_list_scoring(mock_data):
     X, y = mock_data
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2, scoring=["accuracy"], refit="accuracy")
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        mock_cv.return_value = {"test_accuracy": np.array([0.8, 0.8])}
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        mock_fold.return_value = _fold({"accuracy": 0.8})
         search.fit(X, y)
     assert "mean_test_accuracy" in search.cv_results_
 
@@ -486,8 +498,8 @@ def test_multimetric_missing_splits(mock_data):
     search = OptunaSearchCV(
         clf, {}, n_trials=1, cv=2, scoring={"a": "accuracy", "b": "accuracy"}, refit=False, return_train_score=True
     )
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        mock_cv.return_value = {"test_a": np.array([0.8, 0.8]), "train_a": np.array([0.9, 0.9])}
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        mock_fold.return_value = _fold({"a": 0.8}, {"a": 0.9})
         search.fit(X, y)
     assert "mean_test_a" in search.cv_results_
 
@@ -497,8 +509,8 @@ def test_multimetric_refit_false_return_val(mock_data):
     X, y = mock_data
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2, scoring={"a": "accuracy"}, refit=False)
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        mock_cv.return_value = {"test_a": np.array([1.0, 1.0])}
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        mock_fold.return_value = _fold({"a": 1.0})
         search.fit(X, y)
 
     # Check trial value
@@ -510,11 +522,10 @@ def test_multimetric_no_test_keys(mock_data):
     X, y = mock_data
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2, scoring={"a": "accuracy"}, refit=False)
-    with patch("sklearn_optuna.objective.cross_validate") as mock_cv:
-        # Return empty dict - no test scores
-        mock_cv.return_value = {}
-        # Expect ValueError from objective function caught and trial failed?
-        # No, Exception in objective is caught and stored in user_attrs
+    with patch("sklearn_optuna.objective._fit_and_score") as mock_fold:
+        # Folds without any metric: the aggregated result has no test keys.
+        mock_fold.return_value = _fold({})
+        # The ValueError raised in the objective is caught and stored in user_attrs.
         search.fit(X, y)
 
     # Check if trial failed with exception
@@ -599,10 +610,14 @@ def test_all_trials_fail_return_train_score(mock_data):
 
 
 def test_metadata_routing_empty(mock_data):
-    """Test fit when _get_routed_params_for_fit returns empty dict."""
+    """Test fit when _get_routed_params_for_fit routes nothing."""
+    from sklearn.utils import Bunch
+
     X, y = mock_data
     clf = MockEstimator()
     search = OptunaSearchCV(clf, {}, n_trials=1, cv=2)
 
-    with patch.object(search, "_get_routed_params_for_fit", return_value={}):
+    empty = Bunch(estimator=Bunch(fit={}), splitter=Bunch(split={}), scorer=Bunch(score={}))
+    with patch.object(search, "_get_routed_params_for_fit", return_value=empty):
         search.fit(X, y)
+    assert search.best_score_ == 0.5
